@@ -10,6 +10,9 @@ export const ENVIRONMENT = process.env.ENVIRONMENT || 'development';
  */
 export const STORAGE_KEYS = {
   AUTH_TOKEN: '@medivault:auth_token',
+  SESSION_ID: '@medivault:session_id',
+  SESSION_EXPIRY: '@medivault:session_expiry',
+  REMEMBER_ME: '@medivault:remember_me',
   USER_DATA: '@medivault:user_data',
   THEME: '@medivault:theme',
   BIOMETRIC_ENABLED: '@medivault:biometric_enabled',

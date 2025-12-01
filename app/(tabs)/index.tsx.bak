@@ -26,20 +26,12 @@ export default function DashboardScreen() {
   }
 
   // Redirect to appropriate dashboard based on role
-  if (user?.role === 'admin') {
-    return <Redirect href="/(tabs)/admin-dashboard" />;
-  }
-  
   if (user?.role === 'doctor') {
     return <Redirect href="/(tabs)/doctor-dashboard" />;
   }
 
-  if (user?.role === 'pharmacist') {
-    return <Redirect href={"/(tabs)/pharmacist-dashboard" as any}  />;
-  }
-
-  // For patient, redirect to explore for now
-  // You can create patient-dashboard.tsx later
+  // For admin and patient, redirect to explore for now
+  // You can create admin-dashboard.tsx and patient-dashboard.tsx later
   return <Redirect href="/(tabs)/explore" />;
 }
 

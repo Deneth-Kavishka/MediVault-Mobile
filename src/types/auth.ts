@@ -1,9 +1,9 @@
 export interface LoginCredentials {
   email: string;
   password: string;
+  role: 'patient' | 'doctor' | 'pharmacist' | 'admin' | 'lab_technician';
   remember?: boolean;
 }
-
 export interface RegisterData {
   email: string;
   password: string;

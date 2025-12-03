@@ -1,22 +1,12 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import AppointmentsView from '../../components/shared/AppointmentsView';
 
 export default function ExploreScreen() {
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Explore</Text>
-      </View>
-
-      <View style={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Coming Soon</Text>
-          <Text style={styles.cardText}>
-            Explore features will be added here to help you discover new services and information.
-          </Text>
-        </View>
-      </View>
-    </ScrollView>
+    <View style={styles.container}>
+      <AppointmentsView userRole="patient" />
+    </View>
   );
 }
 

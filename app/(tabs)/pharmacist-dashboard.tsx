@@ -3,22 +3,27 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    ImageBackground,
-    Modal,
-    Platform,
-    RefreshControl,
-    Text as RNText,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  ImageBackground,
+  Modal,
+  Platform,
+  RefreshControl,
+  Text as RNText,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
+import Animated from 'react-native-reanimated';
+import DispensingHistory from '../../components/pharmacist/DispensingHistory';
+import QRScanner from '../../components/pharmacist/QRScanner';
+import AppointmentsView from '../../components/shared/AppointmentsView';
 import { sessionService } from '../../src/services/sessionService';
 import { storageService } from '../../src/services/storageService';
+import { useFadeIn, useSlideInTop, useStaggerAnimation } from '../../utils/animations';
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 360;
@@ -70,6 +75,7 @@ export default function PharmacistDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [pharmacistUser, setPharmacistUser] = useState<any>(null);
+  const [activeNav, setActiveNav] = useState<'dashboard' | 'qr-scanner' | 'history' | 'appointments'>('dashboard');
   const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'prescriptions' | 'alerts'>('overview');
   
   const [stats, setStats] = useState<DashboardStats>({
@@ -78,6 +84,14 @@ export default function PharmacistDashboardScreen() {
     prescriptionsToday: 56,
     pendingReorders: 8
   });
+
+  // Slow animations (600-1000ms)
+  const headerAnim = useSlideInTop(0, -30);
+  const stat1Anim = useStaggerAnimation(0, 150);
+  const stat2Anim = useStaggerAnimation(1, 150);
+  const stat3Anim = useStaggerAnimation(2, 150);
+  const stat4Anim = useStaggerAnimation(3, 150);
+  const contentAnim = useFadeIn(600, 800);
 
   const [medicines, setMedicines] = useState<Medicine[]>([
     {
@@ -207,12 +221,7 @@ export default function PharmacistDashboardScreen() {
   };
 
   const handleScanQR = () => {
-    setShowScanModal(true);
-    // Simulate QR scan
-    setTimeout(() => {
-      Alert.alert('QR Code Scanned', 'Prescription RX-2025-001 verified successfully!');
-      setShowScanModal(false);
-    }, 2000);
+    setActiveNav('qr-scanner');
   };
 
   const handleVerifyPrescription = (prescription: Prescription) => {
@@ -316,41 +325,41 @@ export default function PharmacistDashboardScreen() {
     <View>
       {/* Stats Grid */}
       <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
+        <Animated.View style={[styles.statCard, stat1Anim]}>
           <View style={[styles.statIconContainer, { backgroundColor: '#3B82F615' }]}>
             <MaterialCommunityIcons name="pill" size={28} color="#3B82F6" />
           </View>
           <RNText style={styles.statValue}>{stats.totalMedicines}</RNText>
           <RNText style={styles.statLabel}>Total Medicines</RNText>
-        </View>
+        </Animated.View>
 
-        <View style={styles.statCard}>
+        <Animated.View style={[styles.statCard, stat2Anim]}>
           <View style={[styles.statIconContainer, { backgroundColor: '#EF444415' }]}>
             <MaterialCommunityIcons name="alert-circle" size={28} color="#EF4444" />
           </View>
           <RNText style={styles.statValue}>{stats.lowStockItems}</RNText>
           <RNText style={styles.statLabel}>Low Stock</RNText>
-        </View>
+        </Animated.View>
 
-        <View style={styles.statCard}>
+        <Animated.View style={[styles.statCard, stat3Anim]}>
           <View style={[styles.statIconContainer, { backgroundColor: '#10B98115' }]}>
             <MaterialCommunityIcons name="clipboard-text" size={28} color="#10B981" />
           </View>
           <RNText style={styles.statValue}>{stats.prescriptionsToday}</RNText>
           <RNText style={styles.statLabel}>Today's Rx</RNText>
-        </View>
+        </Animated.View>
 
-        <View style={styles.statCard}>
+        <Animated.View style={[styles.statCard, stat4Anim]}>
           <View style={[styles.statIconContainer, { backgroundColor: '#F59E0B15' }]}>
             <MaterialCommunityIcons name="refresh-circle" size={28} color="#F59E0B" />
           </View>
           <RNText style={styles.statValue}>{stats.pendingReorders}</RNText>
           <RNText style={styles.statLabel}>Reorders</RNText>
-        </View>
+        </Animated.View>
       </View>
 
       {/* Quick Actions */}
-      <View style={styles.section}>
+      <Animated.View style={[styles.section, contentAnim]}>
         <RNText style={styles.sectionTitle}>Quick Actions</RNText>
         <View style={styles.quickActionsGrid}>
           <TouchableOpacity style={styles.actionCard} onPress={handleScanQR}>
@@ -372,8 +381,18 @@ export default function PharmacistDashboardScreen() {
             <MaterialCommunityIcons name="bell-alert" size={32} color="#F59E0B" />
             <RNText style={styles.actionText}>Alerts</RNText>
           </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionCard} onPress={() => setActiveNav('history')}>
+            <MaterialCommunityIcons name="history" size={32} color="#8B5CF6" />
+            <RNText style={styles.actionText}>History</RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionCard} onPress={() => setActiveNav('appointments')}>
+            <MaterialCommunityIcons name="calendar-check" size={32} color="#35c6eb" />
+            <RNText style={styles.actionText}>Appointments</RNText>
+          </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Recent Stock Alerts */}
       <View style={styles.section}>
@@ -596,11 +615,14 @@ export default function PharmacistDashboardScreen() {
         <View style={styles.gradientOverlay} />
 
         {/* Header */}
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, headerAnim]}>
           <View style={styles.headerLeft}>
             <TouchableOpacity 
               style={styles.backButton} 
-              onPress={() => router.push('/(auth)/login')}
+              onPress={async () => {
+                await sessionService.clearSession();
+                router.replace('/(auth)/login' as any);
+              }}
             >
               <Ionicons name="arrow-back" size={24} color="#1F2937" />
             </TouchableOpacity>
@@ -612,7 +634,7 @@ export default function PharmacistDashboardScreen() {
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={22} color="#EF4444" />
           </TouchableOpacity>
-        </View>
+        </Animated.View>
 
         {/* Tabs */}
         <View style={styles.tabContainer}>
@@ -645,17 +667,25 @@ export default function PharmacistDashboardScreen() {
         </View>
 
         {/* Content */}
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={styles.contentContainer}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          showsVerticalScrollIndicator={false}
-        >
-          {activeTab === 'overview' && renderOverview()}
-          {activeTab === 'inventory' && renderInventory()}
-          {activeTab === 'prescriptions' && renderPrescriptions()}
-          {activeTab === 'alerts' && renderAlerts()}
-        </ScrollView>
+        {activeNav === 'qr-scanner' ? (
+          <QRScanner />
+        ) : activeNav === 'history' ? (
+          <DispensingHistory />
+        ) : activeNav === 'appointments' ? (
+          <AppointmentsView userRole="pharmacist" userId={pharmacistUser?.id} />
+        ) : (
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.contentContainer}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            showsVerticalScrollIndicator={false}
+          >
+            {activeTab === 'overview' && renderOverview()}
+            {activeTab === 'inventory' && renderInventory()}
+            {activeTab === 'prescriptions' && renderPrescriptions()}
+            {activeTab === 'alerts' && renderAlerts()}
+          </ScrollView>
+        )}
 
         {/* QR Scan Modal */}
         <Modal visible={showScanModal} animationType="fade" transparent>

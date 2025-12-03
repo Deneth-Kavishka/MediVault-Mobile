@@ -15,8 +15,18 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import Animated from 'react-native-reanimated';
+import AdminDoctors from '../../components/admin/AdminDoctors';
+import AdminMessages from '../../components/admin/AdminMessages';
+import AdminNotifications from '../../components/admin/AdminNotifications';
+import AdminPatients from '../../components/admin/AdminPatients';
+import AdminReports from '../../components/admin/AdminReports';
+import AdminSettings from '../../components/admin/AdminSettings';
+import AdminUserManagement from '../../components/admin/AdminUserManagement';
+import AppointmentsView from '../../components/shared/AppointmentsView';
 import { sessionService } from '../../src/services/sessionService';
 import { storageService } from '../../src/services/storageService';
+import { useFadeIn, useSlideInTop, useStaggerAnimation } from '../../utils/animations';
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 360;
@@ -54,6 +64,17 @@ export default function AdminDashboardScreen() {
     activeSessions: 342,
     pendingApprovals: 15
   });
+
+  // Slow animations (600-1000ms)
+  const headerAnim = useSlideInTop(0, -30);
+  const stat1Anim = useStaggerAnimation(0, 150);
+  const stat2Anim = useStaggerAnimation(1, 150);
+  const stat3Anim = useStaggerAnimation(2, 150);
+  const stat4Anim = useStaggerAnimation(3, 150);
+  const stat5Anim = useStaggerAnimation(4, 150);
+  const stat6Anim = useStaggerAnimation(5, 150);
+  const quickActionsAnim = useFadeIn(900, 800);
+  const activitiesAnim = useFadeIn(1100, 800);
 
   const [recentActivities] = useState<RecentActivity[]>([
     {
@@ -144,11 +165,14 @@ export default function AdminDashboardScreen() {
         <View style={styles.gradientOverlay} />
 
         {/* Header */}
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, headerAnim]}>
           <View style={styles.headerLeft}>
             <TouchableOpacity 
               style={styles.backButton} 
-              onPress={() => router.push('/(auth)/login')}
+              onPress={async () => {
+                await sessionService.clearSession();
+                router.replace('/(auth)/login' as any);
+              }}
             >
               <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
@@ -160,7 +184,7 @@ export default function AdminDashboardScreen() {
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color="#fff" />
           </TouchableOpacity>
-        </View>
+        </Animated.View>
 
         {/* Navigation Bar */}
         <View style={styles.navContainer}>
@@ -279,52 +303,69 @@ export default function AdminDashboardScreen() {
           </ScrollView>
         </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        >
-          {/* Quick Stats Grid */}
-          <View style={styles.section}>
+        {activeNav === 'appointments' ? (
+          <AppointmentsView userRole="admin" userId={adminUser?.id} />
+        ) : activeNav === 'messages' ? (
+          <AdminMessages />
+        ) : activeNav === 'notifications' ? (
+          <AdminNotifications />
+        ) : activeNav === 'users' ? (
+          <AdminUserManagement />
+        ) : activeNav === 'patients' ? (
+          <AdminPatients />
+        ) : activeNav === 'doctors' ? (
+          <AdminDoctors />
+        ) : activeNav === 'reports' ? (
+          <AdminReports />
+        ) : activeNav === 'settings' ? (
+          <AdminSettings />
+        ) : (
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          >
+            {/* Quick Stats Grid */}
+            <View style={styles.section}>
             <RNText style={styles.sectionTitle}>Dashboard Overview</RNText>
             <View style={styles.statsGrid}>
-              <View style={styles.statCard}>
+              <Animated.View style={[styles.statCard, stat1Anim]}>
                 <View style={[styles.statIconContainer, { backgroundColor: '#3B82F615' }]}>
                   <MaterialCommunityIcons name="account-group" size={28} color="#3B82F6" />
                 </View>
                 <RNText style={styles.statValue}>{stats.totalUsers.toLocaleString()}</RNText>
                 <RNText style={styles.statLabel}>Total Users</RNText>
-              </View>
+              </Animated.View>
 
-              <View style={styles.statCard}>
+              <Animated.View style={[styles.statCard, stat2Anim]}>
                 <View style={[styles.statIconContainer, { backgroundColor: '#10B98115' }]}>
                   <MaterialCommunityIcons name="doctor" size={28} color="#10B981" />
                 </View>
                 <RNText style={styles.statValue}>{stats.totalDoctors}</RNText>
                 <RNText style={styles.statLabel}>Doctors</RNText>
-              </View>
+              </Animated.View>
 
-              <View style={styles.statCard}>
+              <Animated.View style={[styles.statCard, stat3Anim]}>
                 <View style={[styles.statIconContainer, { backgroundColor: '#8B5CF615' }]}>
                   <MaterialCommunityIcons name="account-heart" size={28} color="#8B5CF6" />
                 </View>
                 <RNText style={styles.statValue}>{stats.totalPatients.toLocaleString()}</RNText>
                 <RNText style={styles.statLabel}>Patients</RNText>
-              </View>
+              </Animated.View>
 
-              <View style={styles.statCard}>
+              <Animated.View style={[styles.statCard, stat4Anim]}>
                 <View style={[styles.statIconContainer, { backgroundColor: '#F59E0B15' }]}>
                   <MaterialCommunityIcons name="calendar-clock" size={28} color="#F59E0B" />
                 </View>
                 <RNText style={styles.statValue}>{stats.totalAppointments.toLocaleString()}</RNText>
                 <RNText style={styles.statLabel}>Appointments</RNText>
-              </View>
+              </Animated.View>
             </View>
           </View>
 
           {/* System Status */}
-          <View style={styles.section}>
+          <Animated.View style={[styles.section, stat5Anim]}>
             <View style={styles.systemStatusCard}>
               <View style={styles.systemStatusHeader}>
                 <MaterialCommunityIcons name="shield-check" size={24} color="#10B981" />
@@ -341,10 +382,10 @@ export default function AdminDashboardScreen() {
                 </View>
               </View>
             </View>
-          </View>
+          </Animated.View>
 
           {/* Quick Actions */}
-          <View style={styles.section}>
+          <Animated.View style={[styles.section, quickActionsAnim]}>
             <RNText style={styles.sectionTitle}>Quick Actions</RNText>
             <View style={styles.actionsGrid}>
               <TouchableOpacity style={styles.actionCard}>
@@ -367,10 +408,10 @@ export default function AdminDashboardScreen() {
                 <RNText style={styles.actionText}>Settings</RNText>
               </TouchableOpacity>
             </View>
-          </View>
+          </Animated.View>
 
           {/* Recent Activity */}
-          <View style={styles.section}>
+          <Animated.View style={[styles.section, activitiesAnim]}>
             <RNText style={styles.sectionTitle}>Recent Activity</RNText>
             {recentActivities.map((activity) => (
               <View key={activity.id} style={styles.activityCard}>
@@ -383,8 +424,9 @@ export default function AdminDashboardScreen() {
                 </View>
               </View>
             ))}
-          </View>
+          </Animated.View>
         </ScrollView>
+        )}
       </ImageBackground>
     </View>
   );

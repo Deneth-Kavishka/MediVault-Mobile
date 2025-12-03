@@ -18,6 +18,8 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { useFadeIn, useScaleIn, useSlideInLeft } from '../../utils/animations';
 
 const { width, height } = Dimensions.get('window');
 const isSmallScreen = width < 360;
@@ -32,6 +34,13 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  // Slow animations (600-800ms)
+  const backButtonAnim = useFadeIn(0, 400);
+  const logoAnim = useScaleIn(200);
+  const titleAnim = useSlideInLeft(300);
+  const formAnim = useFadeIn(400, 600);
+  const footerAnim = useFadeIn(800, 600);
 
   const validate = () => {
     const e: typeof errors = {};
@@ -83,60 +92,11 @@ export default function LoginScreen() {
         await storageService.setSessionExpiry(expiryTime);
         await storageService.setRememberMe(rememberMe);
         
+        // Update authentication state (this will trigger navigation in _layout.tsx)
+        // The _layout.tsx will handle the redirect based on user role
         setLoading(false);
         
-        // Show success alert and navigate
-        if (username === 'admin123') {
-          Alert.alert('Success', 'Logged in as Admin', [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Use push instead of replace to ensure navigation happens
-                router.push('/(tabs)/admin-dashboard' as any);
-              }
-            }
-          ]);
-        } else if (username === 'doctor123') {
-          Alert.alert('Success', 'Logged in as Doctor', [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Use push instead of replace to ensure navigation happens
-                router.push('/(tabs)/doctor-dashboard' as any);
-              }
-            }
-          ]);
-        } else if (username === 'patient123') {
-          Alert.alert('Success', 'Logged in as Patient', [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Use push instead of replace to ensure navigation happens
-                router.push('/(tabs)' as any);
-              }
-            }
-          ]);
-        } else if (username === 'pharmacists123') {
-          Alert.alert('Success', 'Logged in as Pharmacist', [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Use push instead of replace to ensure navigation happens
-                router.push('/(tabs)/pharmacist-dashboard' as any);
-              }
-            }
-          ]);
-        } else if (username === 'labtec123') {
-          Alert.alert('Success', 'Logged in as Lab Technician', [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Use push instead of replace to ensure navigation happens
-                router.push('/(tabs)/lab-technician-dashboard' as any);
-              }
-            }
-          ]);
-        }
+        // Navigation will happen automatically after storage is updated
         return;
       } catch (error: any) {
         setLoading(false);
@@ -191,6 +151,22 @@ export default function LoginScreen() {
       >
         <View style={styles.gradientOverlay} />
         
+        {/* Back Button - Fixed Position */}
+        <Animated.View style={backButtonAnim}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => {
+              console.log('Back button pressed');
+              router.back();
+            }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={24} color="#374151" />
+          </TouchableOpacity>
+        </Animated.View>
+
+
+
         <KeyboardAvoidingView
           behavior={Platform.select({ ios: 'padding', android: undefined })}
           style={styles.keyboardView}
@@ -200,35 +176,22 @@ export default function LoginScreen() {
             showsVerticalScrollIndicator={false}
             bounces={false}
           >
-            {/* Back Button */}
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => router.back()}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="arrow-back" size={24} color="#374151" />
-            </TouchableOpacity>
-
-            {/* Theme Toggle */}
-            <TouchableOpacity style={styles.themeToggle}>
-              <Ionicons name="moon-outline" size={20} color="#6B7280" />
-            </TouchableOpacity>
 
             {/* Login Card */}
             <View style={styles.cardContainer}>
-              <View style={styles.card}>
+              <Animated.View style={[styles.card, formAnim]}>
                 {/* Welcome Icon */}
-                <View style={styles.welcomeIconContainer}>
+                <Animated.View style={[styles.welcomeIconContainer, logoAnim]}>
                   <View style={styles.welcomeIconBadge}>
                     <MaterialCommunityIcons name="heart-pulse" size={32} color="#fff" />
                   </View>
-                </View>
+                </Animated.View>
 
                 {/* Card Header */}
-                <View style={styles.cardHeader}>
+                <Animated.View style={[styles.cardHeader, titleAnim]}>
                   <RNText style={styles.cardTitle}>Welcome Back</RNText>
                   <RNText style={styles.cardSubtitle}>Sign in to access your healthcare dashboard</RNText>
-                </View>
+                </Animated.View>
 
                 {/* Form Fields */}
                 <View style={styles.formSection}>
@@ -327,17 +290,17 @@ export default function LoginScreen() {
                     </Link>
                   </View>
                 </View>
-              </View>
+              </Animated.View>
             </View>
 
             {/* Footer */}
-            <View style={styles.footer}>
+            <Animated.View style={[styles.footer, footerAnim]}>
               <View style={styles.footerContent}>
                 <Ionicons name="shield-checkmark" size={14} color="#6B7280" />
                 <RNText style={styles.footerText}>Secured with end-to-end encryption</RNText>
                 <Ionicons name="lock-closed" size={12} color="#F59E0B" />
               </View>
-            </View>
+            </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
       </ImageBackground>
@@ -378,40 +341,18 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
+    zIndex: 999,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.15,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 2 },
       },
-      android: { elevation: 3 },
-    }),
-  },
-
-  // Theme Toggle
-  themeToggle: {
-    position: 'absolute',
-    top: isSmallScreen ? 20 : 30,
-    right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 2 },
-      },
-      android: { elevation: 3 },
+      android: { elevation: 10 },
     }),
   },
 

@@ -15,12 +15,17 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import Animated from 'react-native-reanimated';
+import CreateMedicalRecord from '../../components/doctor/CreateMedicalRecord';
+import CreatePrescription from '../../components/doctor/CreatePrescription';
 import DAppointments from '../../components/doctor/DAppointments';
 import DMessages from '../../components/doctor/DMessages';
 import DPatientModals from '../../components/doctor/DPatientModals';
 import DPatients from '../../components/doctor/DPatients';
+import OrderLabTest from '../../components/doctor/OrderLabTest';
 import { sessionService } from '../../src/services/sessionService';
 import { storageService } from '../../src/services/storageService';
+import { useFadeIn, useScrollTrigger, useSlideInTop, useStaggerAnimation } from '../../utils/animations';
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 360;
@@ -86,7 +91,7 @@ export default function DoctorDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userInfo, setUserInfo] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'appointments' | 'patients' | 'messages'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'appointments' | 'patients' | 'messages' | 'create-prescription' | 'order-lab-tests' | 'create-medical-record'>('overview');
   
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -108,6 +113,37 @@ export default function DoctorDashboard() {
     totalPatients: 156,
     prescriptionsIssued: 45,
   });
+
+  // Slow animations (600-1000ms)
+  const headerAnim = useSlideInTop(0, -30);
+  const stat1Anim = useStaggerAnimation(0, 150);
+  const stat2Anim = useStaggerAnimation(1, 150);
+  const stat3Anim = useStaggerAnimation(2, 150);
+  const stat4Anim = useStaggerAnimation(3, 150);
+  const quickActionsAnim = useFadeIn(600, 800);
+  const appointmentsAnim = useFadeIn(800, 800);
+  
+  // Scroll triggered animations for feature cards
+  const [triggeredCards, setTriggeredCards] = useState<{[key: number]: boolean}>({});
+  const quickAction1 = useScrollTrigger(0, 800);
+  const quickAction2 = useScrollTrigger(100, 800);
+  const quickAction3 = useScrollTrigger(200, 800);
+  const quickAction4 = useScrollTrigger(300, 800);
+  const quickAction5 = useScrollTrigger(400, 800);
+  const quickAction6 = useScrollTrigger(500, 800);
+
+  useEffect(() => {
+    // Trigger scroll animations on mount with delay
+    const timer = setTimeout(() => {
+      quickAction1.trigger();
+      quickAction2.trigger();
+      quickAction3.trigger();
+      quickAction4.trigger();
+      quickAction5.trigger();
+      quickAction6.trigger();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Sample Data
   const [appointments, setAppointments] = useState<Appointment[]>([
@@ -305,69 +341,81 @@ export default function DoctorDashboard() {
     <>
       {/* Stats Grid */}
       <View style={styles.statsGrid}>
-        <View style={[styles.statCard, styles.transparentCard]}>
+        <Animated.View style={[styles.statCard, styles.transparentCard, stat1Anim]}>
           <MaterialCommunityIcons name="calendar-today" size={28} color="#35c6eb" />
           <RNText style={styles.statNumberTransparent}>{stats.todayAppointments}</RNText>
           <RNText style={styles.statLabelTransparent}>Today's Appointments</RNText>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.statCard, styles.transparentCard]}>
+        <Animated.View style={[styles.statCard, styles.transparentCard, stat2Anim]}>
           <Ionicons name="time-outline" size={28} color="#35c6eb" />
           <RNText style={styles.statNumberTransparent}>{stats.pendingAppointments}</RNText>
           <RNText style={styles.statLabelTransparent}>Pending</RNText>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.statCard, styles.transparentCard]}>
+        <Animated.View style={[styles.statCard, styles.transparentCard, stat3Anim]}>
           <MaterialCommunityIcons name="account-group" size={28} color="#35c6eb" />
           <RNText style={styles.statNumberTransparent}>{stats.totalPatients}</RNText>
           <RNText style={styles.statLabelTransparent}>Total Patients</RNText>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.statCard, styles.transparentCard]}>
+        <Animated.View style={[styles.statCard, styles.transparentCard, stat4Anim]}>
           <MaterialCommunityIcons name="pill" size={28} color="#35c6eb" />
           <RNText style={styles.statNumberTransparent}>{stats.prescriptionsIssued}</RNText>
           <RNText style={styles.statLabelTransparent}>Prescriptions</RNText>
-        </View>
+        </Animated.View>
       </View>
 
       {/* Quick Actions */}
-      <View style={styles.section}>
+      <Animated.View style={[styles.section, quickActionsAnim]}>
         <RNText style={styles.sectionTitle}>Quick Actions</RNText>
         <View style={styles.quickActionsGrid}>
-          <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('appointments')}>
-            <MaterialCommunityIcons name="calendar-check" size={32} color="#35c6eb" />
-            <RNText style={styles.quickActionText}>Appointments</RNText>
-          </TouchableOpacity>
+          <Animated.View style={quickAction1.animatedStyle}>
+            <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('appointments')}>
+              <MaterialCommunityIcons name="calendar-check" size={32} color="#35c6eb" />
+              <RNText style={styles.quickActionText}>Appointments</RNText>
+            </TouchableOpacity>
+          </Animated.View>
 
-          <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('patients')}>
-            <MaterialCommunityIcons name="account-search" size={32} color="#35c6eb" />
-            <RNText style={styles.quickActionText}>Search Patients</RNText>
-          </TouchableOpacity>
+          <Animated.View style={quickAction2.animatedStyle}>
+            <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('patients')}>
+              <MaterialCommunityIcons name="account-search" size={32} color="#35c6eb" />
+              <RNText style={styles.quickActionText}>Search Patients</RNText>
+            </TouchableOpacity>
+          </Animated.View>
 
-          <TouchableOpacity style={styles.quickActionCard} onPress={() => selectedPatient && handleCreateMedicalRecord()}>
-            <MaterialCommunityIcons name="clipboard-text" size={32} color="#35c6eb" />
-            <RNText style={styles.quickActionText}>Medical Records</RNText>
-          </TouchableOpacity>
+          <Animated.View style={quickAction3.animatedStyle}>
+            <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('create-medical-record')}>
+              <MaterialCommunityIcons name="clipboard-text" size={32} color="#35c6eb" />
+              <RNText style={styles.quickActionText}>Create Medical Record</RNText>
+            </TouchableOpacity>
+          </Animated.View>
 
-          <TouchableOpacity style={styles.quickActionCard} onPress={() => selectedPatient && handleIssuePrescription()}>
-            <MaterialCommunityIcons name="prescription" size={32} color="#35c6eb" />
-            <RNText style={styles.quickActionText}>Prescriptions</RNText>
-          </TouchableOpacity>
+          <Animated.View style={quickAction4.animatedStyle}>
+            <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('create-prescription')}>
+              <MaterialCommunityIcons name="prescription" size={32} color="#35c6eb" />
+              <RNText style={styles.quickActionText}>Create Prescription</RNText>
+            </TouchableOpacity>
+          </Animated.View>
 
-          <TouchableOpacity style={styles.quickActionCard} onPress={() => selectedPatient && handleOrderLabTest()}>
-            <MaterialCommunityIcons name="test-tube" size={32} color="#35c6eb" />
-            <RNText style={styles.quickActionText}>Lab Tests</RNText>
-          </TouchableOpacity>
+          <Animated.View style={quickAction5.animatedStyle}>
+            <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('order-lab-tests')}>
+              <MaterialCommunityIcons name="test-tube" size={32} color="#35c6eb" />
+              <RNText style={styles.quickActionText}>Order Lab Tests</RNText>
+            </TouchableOpacity>
+          </Animated.View>
 
-          <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('messages')}>
-            <MaterialCommunityIcons name="message-text" size={32} color="#35c6eb" />
-            <RNText style={styles.quickActionText}>Messages</RNText>
-          </TouchableOpacity>
+          <Animated.View style={quickAction6.animatedStyle}>
+            <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('messages')}>
+              <MaterialCommunityIcons name="message-text" size={32} color="#35c6eb" />
+              <RNText style={styles.quickActionText}>Messages</RNText>
+            </TouchableOpacity>
+          </Animated.View>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Today's Appointments */}
-      <View style={styles.section}>
+      <Animated.View style={[styles.section, appointmentsAnim]}>
         <View style={styles.sectionHeader}>
           <RNText style={styles.sectionTitle}>Today's Appointments</RNText>
           <TouchableOpacity onPress={() => setActiveTab('appointments')}>
@@ -392,7 +440,7 @@ export default function DoctorDashboard() {
             <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
           </TouchableOpacity>
         ))}
-      </View>
+      </Animated.View>
     </>
   );
 
@@ -413,11 +461,14 @@ export default function DoctorDashboard() {
         <View style={styles.overlay} />
         
         {/* Header */}
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, headerAnim]}>
           <View style={styles.headerLeft}>
             <TouchableOpacity 
               style={styles.backButton} 
-              onPress={() => router.push('/(auth)/login')}
+              onPress={async () => {
+                await sessionService.clearSession();
+                router.replace('/(auth)/login' as any);
+              }}
             >
               <Ionicons name="arrow-back" size={24} color="#1F2937" />
             </TouchableOpacity>
@@ -437,7 +488,7 @@ export default function DoctorDashboard() {
               <Ionicons name="log-out-outline" size={22} color="#EF4444" />
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Tab Navigation */}
         <View style={styles.tabContainer}>
@@ -446,6 +497,9 @@ export default function DoctorDashboard() {
               { key: 'overview', label: 'Overview', icon: 'grid-outline' },
               { key: 'appointments', label: 'Appointments', icon: 'calendar-outline' },
               { key: 'patients', label: 'Patients', icon: 'people-outline' },
+              { key: 'create-medical-record', label: 'Medical Records', icon: 'document-text-outline' },
+              { key: 'create-prescription', label: 'Prescriptions', icon: 'medical-outline' },
+              { key: 'order-lab-tests', label: 'Lab Tests', icon: 'flask-outline' },
               { key: 'messages', label: 'Messages', icon: 'chatbubbles-outline' },
             ].map(tab => (
               <TouchableOpacity
@@ -477,6 +531,9 @@ export default function DoctorDashboard() {
           showsVerticalScrollIndicator={false}
         >
           {activeTab === 'overview' && renderOverview()}
+          {activeTab === 'create-prescription' && <CreatePrescription />}
+          {activeTab === 'create-medical-record' && <CreateMedicalRecord />}
+          {activeTab === 'order-lab-tests' && <OrderLabTest />}
           {activeTab === 'appointments' && (
             <DAppointments
               appointments={appointments}
@@ -755,11 +812,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   quickActionCard: {
-    flex: 1,
-    minWidth: isSmallScreen ? '30%' : '30%',
+    width: isTablet ? (width - 80) / 3 - 8 : (width - 64) / 3 - 8,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 12,
-    padding: 16,
+    padding: isSmallScreen ? 12 : 16,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
@@ -768,9 +824,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+    minHeight: isSmallScreen ? 100 : 110,
   },
   quickActionText: {
-    fontSize: 11,
+    fontSize: isSmallScreen ? 10 : 11,
     fontWeight: '600',
     color: '#374151',
     textAlign: 'center',

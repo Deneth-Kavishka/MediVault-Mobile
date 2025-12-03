@@ -10,8 +10,19 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import {
+  useFadeIn,
+  usePressAnimation,
+  useScaleIn,
+  useSlideInBottom,
+  useSlideInLeft,
+  useSlideInRight,
+  useSlideInTop,
+  useStaggerAnimation,
+} from '../../utils/animations';
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 360;
@@ -24,27 +35,36 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ router }) => {
+  const headerAnimation = useSlideInTop(0);
+  const logoAnimation = useSlideInLeft(100);
+  const buttonAnimation = useSlideInRight(100);
+  const { animatedStyle: pressStyle, onPressIn, onPressOut } = usePressAnimation();
+
   return (
-    <View style={styles.headerContainer}>
-      <View style={styles.logoContainer}>
+    <Animated.View style={[styles.headerContainer, headerAnimation]}>
+      <Animated.View style={[styles.logoContainer, logoAnimation]}>
         <MaterialCommunityIcons name="hospital-building" size={28} color="#007bff" />
         <Text style={styles.logoText}>MediVault</Text>
-      </View>
+      </Animated.View>
 
-      <View style={styles.headerRight}>
+      <Animated.View style={[styles.headerRight, buttonAnimation]}>
         <TouchableOpacity style={styles.themToggle}>
           <Feather name="moon" size={20} color="#374151" />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={styles.headerButton}
-          onPress={() => router.push('/(auth)/login')}
-        >
-          <Text style={styles.headerButtonText}>Sign In</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+        <Animated.View style={pressStyle}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={styles.headerButton}
+            onPress={() => router.push('/(auth)/login')}
+            onPressIn={onPressIn}
+            onPressOut={onPressOut}
+          >
+            <Text style={styles.headerButtonText}>Sign In</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </Animated.View>
+    </Animated.View>
   );
 };
 
@@ -53,6 +73,12 @@ const Header: React.FC<HeaderProps> = ({ router }) => {
 // -----------------------------------------
 export default function LandingPage(): React.ReactElement {
   const router = useRouter();
+  const titleAnimation = useSlideInLeft(200);
+  const descriptionAnimation = useFadeIn(300, 400);
+  const heroAnimation = useScaleIn(400);
+  const buttonsAnimation = useSlideInBottom(500);
+  const { animatedStyle: primaryButtonPress, onPressIn: onPrimaryPress, onPressOut: onPrimaryRelease } = usePressAnimation();
+  const { animatedStyle: secondaryButtonPress, onPressIn: onSecondaryPress, onPressOut: onSecondaryRelease } = usePressAnimation();
 
   const statsData = [
     { icon: 'account-group', count: '10,000+', label: 'Patients', color: '#3B82F6' },
@@ -117,93 +143,105 @@ export default function LandingPage(): React.ReactElement {
           showsVerticalScrollIndicator={false}
         >
           {/* Main Content Card */}
-          <View style={styles.contentCard}>
+          <Animated.View style={[styles.contentCard, useFadeIn(100, 500)]}>
             {/* Title Section */}
-            <View style={styles.titleSection}>
+            <Animated.View style={[styles.titleSection, titleAnimation]}>
               <Text style={styles.title}>Your Health,</Text>
               <Text style={styles.titleHighlight}>Digitally</Text>
               <Text style={styles.titleHighlight}>Connected</Text>
-            </View>
+            </Animated.View>
 
             {/* Description */}
-            <Text style={styles.description}>
+            <Animated.Text style={[styles.description, descriptionAnimation]}>
               MediVault brings together patients, doctors, pharmacists, and lab technicians in one 
               secure, comprehensive, and patient-centered healthcare management platform. Secure, efficient, and patient-centered.
-            </Text>
+            </Animated.Text>
 
             {/* Hero Image */}
-            <TouchableOpacity 
-              style={styles.heroImageContainer}
-              activeOpacity={0.9}
-              onPress={() => {}}
-            >
-              <View style={styles.heroImageBorder}>
-                <ImageBackground
-                  source={require('../../assets/images/medical-team.jpg')}
-                  style={styles.heroImage}
-                  imageStyle={styles.heroImageStyle}
-                  blurRadius={0}
-                >
-                  <View style={styles.heroImageOverlay} />
-                </ImageBackground>
-              </View>
-            </TouchableOpacity>
+            <Animated.View style={heroAnimation}>
+              <TouchableOpacity 
+                style={styles.heroImageContainer}
+                activeOpacity={0.9}
+                onPress={() => {}}
+              >
+                <View style={styles.heroImageBorder}>
+                  <ImageBackground
+                    source={require('../../assets/images/medical-team.jpg')}
+                    style={styles.heroImage}
+                    imageStyle={styles.heroImageStyle}
+                    blurRadius={0}
+                  >
+                    <View style={styles.heroImageOverlay} />
+                  </ImageBackground>
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
 
             {/* Action Buttons */}
-            <View style={styles.buttonGroup}>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={styles.buttonPrimary}
-                onPress={() => router.push('/(auth)/register')}
-              >
-                <Text style={styles.buttonPrimaryText}>Get Started</Text>
-              </TouchableOpacity>
+            <Animated.View style={[styles.buttonGroup, buttonsAnimation]}>
+              <Animated.View style={[{ flex: 1 }, primaryButtonPress]}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.buttonPrimary}
+                  onPress={() => router.push('/(auth)/register')}
+                  onPressIn={onPrimaryPress}
+                  onPressOut={onPrimaryRelease}
+                >
+                  <Text style={styles.buttonPrimaryText}>Get Started</Text>
+                </TouchableOpacity>
+              </Animated.View>
 
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={styles.buttonSecondary}
-                onPress={() => router.push('/(auth)/login')}
-              >
-                <Text style={styles.buttonSecondaryText}>Learn More</Text>
-              </TouchableOpacity>
-            </View>
+              <Animated.View style={[{ flex: 1 }, secondaryButtonPress]}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.buttonSecondary}
+                  onPress={() => router.push('/(auth)/login')}
+                  onPressIn={onSecondaryPress}
+                  onPressOut={onSecondaryRelease}
+                >
+                  <Text style={styles.buttonSecondaryText}>Learn More</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            </Animated.View>
 
             {/* Stats Grid */}
             <View style={styles.statsContainer}>
               {statsData.map((stat, index) => (
-                <View key={index} style={styles.statCard}>
+                <Animated.View key={index} style={[styles.statCard, useStaggerAnimation(index, 100)]}>
                   <View style={[styles.statIconContainer, { backgroundColor: `${stat.color}15` }]}>
                     <MaterialCommunityIcons name={stat.icon as any} size={24} color={stat.color} />
                   </View>
                   <Text style={styles.statCount}>{stat.count}</Text>
                   <Text style={styles.statLabel}>{stat.label}</Text>
-                </View>
+                </Animated.View>
               ))}
             </View>
-          </View>
+          </Animated.View>
 
           {/* Features Section */}
-          <View style={styles.featuresSection}>
-            <Text style={styles.featuresTitle}>Everything You Need for Modern Healthcare</Text>
-            <Text style={styles.featuresSubtitle}>
+          <Animated.View style={[styles.featuresSection, useSlideInBottom(800)]}>
+            <Animated.Text style={[styles.featuresTitle, useFadeIn(900, 400)]}>
+              Everything You Need for Modern Healthcare
+            </Animated.Text>
+            <Animated.Text style={[styles.featuresSubtitle, useFadeIn(1000, 400)]}>
               A complete platform designed to streamline healthcare workflows and improve patient outcomes
-            </Text>
+            </Animated.Text>
 
             <View style={styles.featuresGrid}>
               {featuresData.map((feature, index) => (
-                <View key={index} style={styles.featureCard}>
+                <Animated.View key={index} style={[styles.featureCard, useStaggerAnimation(index, 120)]}>
                   <View style={[styles.featureIconContainer, { backgroundColor: `${feature.color}15` }]}>
                     <MaterialCommunityIcons name={feature.icon as any} size={28} color={feature.color} />
                   </View>
                   <Text style={styles.featureTitle}>{feature.title}</Text>
                   <Text style={styles.featureDescription}>{feature.description}</Text>
-                </View>
+                </Animated.View>
               ))}
             </View>
-          </View>
+          </Animated.View>
 
           {/* Call to Action Banner */}
-          <View style={styles.ctaBanner}>
+          <Animated.View style={[styles.ctaBanner, useScaleIn(1200)]}>
             <Text style={styles.ctaTitle}>Ready to Transform Healthcare Management?</Text>
             <Text style={styles.ctaSubtitle}>
               Join thousands of healthcare professionals and patients using MediVault
@@ -215,7 +253,7 @@ export default function LandingPage(): React.ReactElement {
             >
               <Text style={styles.ctaButtonText}>Start Now</Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
 
           {/* Footer */}
           <View style={styles.footer}>

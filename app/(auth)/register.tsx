@@ -6,18 +6,20 @@ import { Link, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
-  Alert,
-  Dimensions,
-  ImageBackground,
-  KeyboardAvoidingView,
-  Platform,
-  Text as RNText,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Dimensions,
+    ImageBackground,
+    KeyboardAvoidingView,
+    Platform,
+    Text as RNText,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { useFadeIn, useScaleIn, useSlideInBottom } from '../../utils/animations';
 
 const { width, height } = Dimensions.get('window');
 const isSmallScreen = width < 360;
@@ -39,6 +41,13 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+
+  // Slow animations (600-800ms)
+  const backButtonAnim = useFadeIn(0, 400);
+  const iconAnim = useScaleIn(200);
+  const titleAnim = useSlideInBottom(300, 30);
+  const subtitleAnim = useFadeIn(400, 600);
+  const cardAnim = useSlideInBottom(500, 40);
 
   const updateForm = (key: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -92,9 +101,11 @@ export default function RegisterScreen() {
         <View style={styles.overlay} />
         
         {/* Back Button */}
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
-        </TouchableOpacity>
+        <Animated.View style={backButtonAnim}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          </TouchableOpacity>
+        </Animated.View>
 
         <KeyboardAvoidingView
           behavior={Platform.select({ ios: 'padding', android: undefined })}
@@ -107,15 +118,15 @@ export default function RegisterScreen() {
           >
             <View style={styles.content}>
               {/* Welcome Badge */}
-              <View style={styles.iconBadge}>
+              <Animated.View style={[styles.iconBadge, iconAnim]}>
                 <MaterialCommunityIcons name="account-plus" size={32} color="#fff" />
-              </View>
+              </Animated.View>
 
-              <RNText style={styles.welcomeTitle}>Create Account</RNText>
-              <RNText style={styles.welcomeSubtitle}>Join MediVault and manage your health</RNText>
+              <Animated.Text style={[styles.welcomeTitle, titleAnim]}>Create Account</Animated.Text>
+              <Animated.Text style={[styles.welcomeSubtitle, subtitleAnim]}>Join MediVault and manage your health</Animated.Text>
 
               {/* Register Card */}
-              <View style={styles.card}>
+              <Animated.View style={[styles.card, cardAnim]}>
                 {/* Role Selection */}
                 <View style={styles.roleSection}>
                   <RNText style={styles.roleLabel}>Select Your Role</RNText>
@@ -277,7 +288,7 @@ export default function RegisterScreen() {
                     </Link>
                   </View>
                 </View>
-              </View>
+              </Animated.View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

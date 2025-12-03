@@ -17,8 +17,16 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import Animated from 'react-native-reanimated';
+import AssignedTests from '../../components/lab-technician/AssignedTests';
+import FlagAbnormalResults from '../../components/lab-technician/FlagAbnormalResults';
+import ManageNotifications from '../../components/lab-technician/ManageNotifications';
+import TestHistory from '../../components/lab-technician/TestHistory';
+import UploadResults from '../../components/lab-technician/UploadResults';
+import AppointmentsView from '../../components/shared/AppointmentsView';
 import { sessionService } from '../../src/services/sessionService';
 import { storageService } from '../../src/services/storageService';
+import { useFadeIn, useSlideInTop, useStaggerAnimation } from '../../utils/animations';
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 360;
@@ -52,6 +60,7 @@ export default function LabTechnicianDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [userInfo, setUserInfo] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'assigned' | 'completed' | 'history'>('overview');
+  const [activeNav, setActiveNav] = useState<'dashboard' | 'assigned-tests' | 'upload-results' | 'flag-abnormal' | 'notifications' | 'history' | 'appointments'>('dashboard');
   
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,6 +84,14 @@ export default function LabTechnicianDashboard() {
     completedToday: 8,
     abnormalResults: 3,
   });
+
+  // Slow animations (600-1000ms)
+  const headerAnim = useSlideInTop(0, -30);
+  const stat1Anim = useStaggerAnimation(0, 150);
+  const stat2Anim = useStaggerAnimation(1, 150);
+  const stat3Anim = useStaggerAnimation(2, 150);
+  const stat4Anim = useStaggerAnimation(3, 150);
+  const contentAnim = useFadeIn(600, 800);
 
   // Sample Data
   const [labTests, setLabTests] = useState<LabTest[]>([
@@ -316,57 +333,72 @@ export default function LabTechnicianDashboard() {
     <>
       {/* Stats Grid */}
       <View style={styles.statsGrid}>
-        <View style={[styles.statCard, styles.transparentCard]}>
+        <Animated.View style={[styles.statCard, styles.transparentCard, stat1Anim]}>
           <MaterialCommunityIcons name="test-tube" size={28} color="#35c6eb" />
           <RNText style={styles.statNumberTransparent}>{stats.assignedTests}</RNText>
           <RNText style={styles.statLabelTransparent}>Assigned Tests</RNText>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.statCard, styles.transparentCard]}>
+        <Animated.View style={[styles.statCard, styles.transparentCard, stat2Anim]}>
           <MaterialCommunityIcons name="progress-clock" size={28} color="#35c6eb" />
           <RNText style={styles.statNumberTransparent}>{stats.inProgressTests}</RNText>
           <RNText style={styles.statLabelTransparent}>In Progress</RNText>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.statCard, styles.transparentCard]}>
+        <Animated.View style={[styles.statCard, styles.transparentCard, stat3Anim]}>
           <MaterialCommunityIcons name="check-circle" size={28} color="#35c6eb" />
           <RNText style={styles.statNumberTransparent}>{stats.completedToday}</RNText>
           <RNText style={styles.statLabelTransparent}>Completed Today</RNText>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.statCard, styles.transparentCard]}>
+        <Animated.View style={[styles.statCard, styles.transparentCard, stat4Anim]}>
           <MaterialCommunityIcons name="alert-circle" size={28} color="#35c6eb" />
           <RNText style={styles.statNumberTransparent}>{stats.abnormalResults}</RNText>
           <RNText style={styles.statLabelTransparent}>Abnormal Results</RNText>
-        </View>
+        </Animated.View>
       </View>
 
       {/* Quick Actions */}
-      <View style={styles.section}>
+      <Animated.View style={[styles.section, contentAnim]}>
         <RNText style={styles.sectionTitle}>Quick Actions</RNText>
         <View style={styles.quickActionsGrid}>
-          <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('assigned')}>
+          <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveNav('assigned-tests')}>
             <MaterialCommunityIcons name="clipboard-list" size={32} color="#35c6eb" />
-            <RNText style={styles.quickActionText}>View Assigned Tests</RNText>
+            <RNText style={styles.quickActionText}>Assigned Tests</RNText>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('completed')}>
-            <MaterialCommunityIcons name="clipboard-check" size={32} color="#35c6eb" />
-            <RNText style={styles.quickActionText}>Completed Tests</RNText>
+          <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveNav('upload-results')}>
+            <MaterialCommunityIcons name="upload" size={32} color="#35c6eb" />
+            <RNText style={styles.quickActionText}>Upload Results</RNText>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('history')}>
+          <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveNav('flag-abnormal')}>
+            <MaterialCommunityIcons name="alert-circle" size={32} color="#35c6eb" />
+            <RNText style={styles.quickActionText}>Abnormal Results</RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveNav('history')}>
             <MaterialCommunityIcons name="history" size={32} color="#35c6eb" />
             <RNText style={styles.quickActionText}>Test History</RNText>
           </TouchableOpacity>
+
+          <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveNav('appointments')}>
+            <MaterialCommunityIcons name="calendar-check" size={32} color="#35c6eb" />
+            <RNText style={styles.quickActionText}>Appointments</RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveNav('notifications')}>
+            <MaterialCommunityIcons name="bell-ring" size={32} color="#35c6eb" />
+            <RNText style={styles.quickActionText}>Notifications</RNText>
+          </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
 
       {/* Urgent Tests */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <RNText style={styles.sectionTitle}>Urgent & STAT Tests</RNText>
-          <TouchableOpacity onPress={() => setActiveTab('assigned')}>
+          <TouchableOpacity onPress={() => setActiveNav('assigned-tests')}>
             <RNText style={styles.viewAllText}>View All</RNText>
           </TouchableOpacity>
         </View>
@@ -503,11 +535,14 @@ export default function LabTechnicianDashboard() {
         <View style={styles.overlay} />
 
         {/* Header */}
-        <View style={styles.header}>
+        <Animated.View style={[styles.header, headerAnim]}>
           <View style={styles.headerLeft}>
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => router.push('/(auth)/login')}
+              onPress={async () => {
+                await sessionService.clearSession();
+                router.replace('/(auth)/login' as any);
+              }}
             >
               <Ionicons name="arrow-back" size={24} color="#1F2937" />
             </TouchableOpacity>
@@ -527,29 +562,32 @@ export default function LabTechnicianDashboard() {
               <Ionicons name="log-out-outline" size={22} color="#EF4444" />
             </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
 
-        {/* Tab Navigation */}
+        {/* Navigation Bar */}
         <View style={styles.tabContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {[
-              { key: 'overview', label: 'Overview', icon: 'grid-outline' },
-              { key: 'assigned', label: 'Assigned Tests', icon: 'clipboard-outline' },
-              { key: 'completed', label: 'Completed', icon: 'checkmark-done-outline' },
-              { key: 'history', label: 'History', icon: 'time-outline' },
-            ].map(tab => (
+              { key: 'dashboard', label: 'Dashboard', icon: 'grid-outline' },
+              { key: 'assigned-tests', label: 'Assigned Tests', icon: 'clipboard-outline' },
+              { key: 'upload-results', label: 'Upload Results', icon: 'cloud-upload-outline' },
+              { key: 'flag-abnormal', label: 'Abnormal Results', icon: 'alert-circle-outline' },
+              { key: 'notifications', label: 'Notifications', icon: 'notifications-outline' },
+              { key: 'history', label: 'Test History', icon: 'time-outline' },
+              { key: 'appointments', label: 'Appointments', icon: 'calendar-outline' },
+            ].map(nav => (
               <TouchableOpacity
-                key={tab.key}
-                style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-                onPress={() => setActiveTab(tab.key as any)}
+                key={nav.key}
+                style={[styles.tab, activeNav === nav.key && styles.tabActive]}
+                onPress={() => setActiveNav(nav.key as any)}
               >
                 <Ionicons
-                  name={tab.icon as any}
+                  name={nav.icon as any}
                   size={20}
-                  color={activeTab === tab.key ? '#35c6eb' : '#6B7280'}
+                  color={activeNav === nav.key ? '#35c6eb' : '#6B7280'}
                 />
-                <RNText style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-                  {tab.label}
+                <RNText style={[styles.tabText, activeNav === nav.key && styles.tabTextActive]}>
+                  {nav.label}
                 </RNText>
               </TouchableOpacity>
             ))}
@@ -557,18 +595,22 @@ export default function LabTechnicianDashboard() {
         </View>
 
         {/* Content */}
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={styles.contentContainer}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          showsVerticalScrollIndicator={false}
-        >
-          {activeTab === 'overview' && renderOverview()}
-          {activeTab === 'assigned' && renderTestsList()}
-          {activeTab === 'completed' &&
-            renderTestsList()}
-          {activeTab === 'history' && renderTestsList()}
-        </ScrollView>
+        {activeNav === 'dashboard' && (
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.contentContainer}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            showsVerticalScrollIndicator={false}
+          >
+            {renderOverview()}
+          </ScrollView>
+        )}
+        {activeNav === 'assigned-tests' && <AssignedTests />}
+        {activeNav === 'upload-results' && <UploadResults />}
+        {activeNav === 'flag-abnormal' && <FlagAbnormalResults />}
+        {activeNav === 'notifications' && <ManageNotifications />}
+        {activeNav === 'history' && <TestHistory />}
+        {activeNav === 'appointments' && <AppointmentsView userRole="lab_technician" userId={userInfo?.id} />}
 
         {/* Test Details Modal */}
         <Modal visible={showTestDetailsModal} animationType="slide" transparent onRequestClose={() => setShowTestDetailsModal(false)}>

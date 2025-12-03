@@ -102,6 +102,39 @@ export default function DPatientModals({
   updateMedication,
   removeMedication,
 }: DPatientModalsProps) {
+  const [generatedQRCode, setGeneratedQRCode] = React.useState<string>('');
+  const [showQRPreview, setShowQRPreview] = React.useState(false);
+
+  const generatePrescriptionQRCode = () => {
+    // Generate unique prescription code
+    const prescriptionCode = `RX-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    
+    // Create prescription data object
+    const prescriptionData = {
+      code: prescriptionCode,
+      patientNIC: selectedPatient?.nic,
+      patientName: selectedPatient?.name,
+      doctorName: 'Dr. ' + selectedPatient?.name, // In real app, get from user context
+      issueDate: new Date().toISOString().split('T')[0],
+      validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      medications: prescription.medications.filter(m => m.name && m.dosage),
+      notes: prescription.notes
+    };
+
+    // Convert to JSON string for QR code
+    const qrData = JSON.stringify(prescriptionData);
+    setGeneratedQRCode(qrData);
+    setShowQRPreview(true);
+  };
+
+  const handleSavePrescriptionWithQR = () => {
+    generatePrescriptionQRCode();
+    setTimeout(() => {
+      savePrescription();
+      Alert.alert('Success', 'Prescription issued with QR code generated successfully!');
+    }, 500);
+  };
+
   return (
     <>
       {/* Patient Dashboard Modal - Main interaction point */}
@@ -261,7 +294,22 @@ export default function DPatientModals({
               <TextInput style={[styles.input, styles.textArea]} placeholder="Any special instructions..." placeholderTextColor="#9CA3AF"
                 value={prescription.notes} onChangeText={(text) => setPrescription({ ...prescription, notes: text })} multiline />
 
-              <TouchableOpacity style={styles.saveButton} onPress={savePrescription}>
+              {showQRPreview && generatedQRCode && (
+                <View style={styles.qrPreviewContainer}>
+                  <RNText style={styles.qrPreviewTitle}>Generated QR Code Preview</RNText>
+                  <View style={styles.qrCodeWrapper}>
+                    <QRCode
+                      value={generatedQRCode}
+                      size={200}
+                      backgroundColor="white"
+                      color="black"
+                    />
+                  </View>
+                  <RNText style={styles.qrPreviewNote}>This QR code will be included in the prescription</RNText>
+                </View>
+              )}
+
+              <TouchableOpacity style={styles.saveButton} onPress={handleSavePrescriptionWithQR}>
                 <MaterialCommunityIcons name="qrcode-scan" size={20} color="#fff" />
                 <RNText style={[styles.saveButtonText, { marginLeft: 8 }]}>Issue Prescription with QR</RNText>
               </TouchableOpacity>
@@ -475,6 +523,38 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#35c6eb',
     fontWeight: '600',
+  },
+  qrPreviewContainer: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    padding: 20,
+    marginVertical: 20,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#35c6eb',
+    borderStyle: 'dashed',
+  },
+  qrPreviewTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 16,
+  },
+  qrCodeWrapper: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  qrPreviewNote: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 12,
+    textAlign: 'center',
   },
   medicationCard: {
     backgroundColor: '#F9FAFB',

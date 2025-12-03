@@ -27,7 +27,7 @@ function RootLayoutNav() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check session on app launch
+  // Check session on app launch and whenever user storage changes
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -49,42 +49,64 @@ function RootLayoutNav() {
 
     checkSession();
 
+    // Set up an interval to check authentication status periodically
+    const interval = setInterval(async () => {
+      const token = await storageService.getToken();
+      const user = await storageService.getUser();
+      const newAuthState = !!(token && user);
+      
+      if (newAuthState !== isAuthenticated) {
+        setIsAuthenticated(newAuthState);
+      }
+    }, 500); // Check every 500ms
+
     return () => {
       sessionService.stopAutoRefresh();
+      clearInterval(interval);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   // Handle navigation based on authentication state
   useEffect(() => {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const onLandingPage = segments[1] === 'landing-page';
-    const onLoginPage = segments[1] === 'login';
-    const onRegisterPage = segments[1] === 'register';
-    const onForgotPasswordPage = segments[1] === 'forgot-password';
     const inTabsGroup = segments[0] === '(tabs)';
+    const currentAuthPage = segments[1]; // landing-page, login, register, etc.
 
-    // Don't auto-redirect if user is actively on auth pages (allow manual navigation)
-    if (onLandingPage || onRegisterPage || onForgotPasswordPage) return;
+    // If not authenticated, allow navigation within auth group
+    if (!isAuthenticated) {
+      // Only redirect to landing page if they're trying to access tabs
+      if (inTabsGroup) {
+        router.replace('/(auth)/landing-page' as any);
+      }
+      // Otherwise let them navigate freely in auth group
+      return;
+    }
 
-    // Don't interfere when user is in tabs (already logged in and navigating)
-    if (inTabsGroup) return;
+    // If authenticated, check if they're in auth group (except landing page which is public)
+    if (isAuthenticated) {
+      // Allow landing page to be viewed even when authenticated
+      if (currentAuthPage === 'landing-page') return;
 
-    if (!isAuthenticated && !inAuthGroup) {
-      // Redirect to landing page if not authenticated and trying to access protected routes
-      router.replace('/(auth)/landing-page' as any);
-    } else if (isAuthenticated && inAuthGroup && !onLoginPage) {
-      // Only redirect if authenticated and NOT on login page (to allow alert to show)
-      const checkAndRedirect = async () => {
-        const user = await storageService.getUser();
-        if (user?.role === 'doctor') {
-          router.replace('/(tabs)/doctor-dashboard' as any);
-        } else {
-          router.replace('/(tabs)' as any);
-        }
-      };
-      checkAndRedirect();
+      // If authenticated and on login/register page, redirect to dashboard
+      if (inAuthGroup && (currentAuthPage === 'login' || currentAuthPage === 'register')) {
+        const checkAndRedirect = async () => {
+          const user = await storageService.getUser();
+          if (user?.role === 'doctor') {
+            router.replace('/(tabs)/doctor-dashboard' as any);
+          } else if (user?.role === 'admin') {
+            router.replace('/(tabs)/admin-dashboard' as any);
+          } else if (user?.role === 'pharmacist') {
+            router.replace('/(tabs)/pharmacist-dashboard' as any);
+          } else if (user?.role === 'lab_technician') {
+            router.replace('/(tabs)/lab-technician-dashboard' as any);
+          } else {
+            router.replace('/(tabs)' as any);
+          }
+        };
+        checkAndRedirect();
+      }
     }
   }, [isAuthenticated, segments, isLoading]);
 

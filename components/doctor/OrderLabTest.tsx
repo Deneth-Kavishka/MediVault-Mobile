@@ -192,7 +192,7 @@ export default function OrderLabTest() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <MaterialCommunityIcons name="test-tube" size={32} color="#35c6eb" />
+          <MaterialCommunityIcons name="test-tube" size={32} color="#1E4BA3" />
           <Text style={styles.headerTitle}>Order Lab Tests</Text>
           <Text style={styles.headerSubtitle}>Complete patient and test information</Text>
         </View>
@@ -297,7 +297,7 @@ export default function OrderLabTest() {
             <Ionicons
               name={showCommonTests ? 'chevron-up' : 'chevron-down'}
               size={24}
-              color="#35c6eb"
+              color="#1E4BA3"
             />
           </TouchableOpacity>
 
@@ -309,7 +309,7 @@ export default function OrderLabTest() {
                   style={styles.commonTestCard}
                   onPress={() => addCommonTest(test)}
                 >
-                  <MaterialCommunityIcons name="plus-circle" size={20} color="#35c6eb" />
+                  <MaterialCommunityIcons name="plus-circle" size={20} color="#1E4BA3" />
                   <Text style={styles.commonTestName}>{test.name}</Text>
                   <Text style={styles.commonTestType}>{test.type}</Text>
                 </TouchableOpacity>
@@ -323,7 +323,7 @@ export default function OrderLabTest() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Lab Tests</Text>
             <TouchableOpacity style={styles.addButton} onPress={addLabTest}>
-              <Ionicons name="add-circle" size={24} color="#35c6eb" />
+              <Ionicons name="add-circle" size={24} color="#1E4BA3" />
               <Text style={styles.addButtonText}>Add Test</Text>
             </TouchableOpacity>
           </View>
@@ -440,7 +440,7 @@ export default function OrderLabTest() {
 
         {/* Info Card */}
         <View style={styles.infoCard}>
-          <Ionicons name="information-circle" size={24} color="#35c6eb" />
+          <Ionicons name="information-circle" size={24} color="#1E4BA3" />
           <Text style={styles.infoText}>
             Lab orders will be sent to the lab technician for processing. Patients will
             receive notifications when results are ready.
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#35c6eb',
+    color: '#1E4BA3',
   },
   testCard: {
     backgroundColor: '#F9FAFB',
@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -656,8 +656,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   categoryChipActive: {
-    backgroundColor: '#35c6eb',
-    borderColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
+    borderColor: '#1E4BA3',
   },
   categoryChipText: {
     fontSize: 12,
@@ -712,12 +712,12 @@ const styles = StyleSheet.create({
   infoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(53, 198, 235, 0.1)',
+    backgroundColor: 'rgba(30, 75, 163, 0.1)',
     borderRadius: 12,
     padding: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: 'rgba(53, 198, 235, 0.3)',
+    borderColor: 'rgba(30, 75, 163, 0.3)',
   },
   infoText: {
     flex: 1,
@@ -726,3 +726,4 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
+

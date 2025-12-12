@@ -587,9 +587,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   filterChipActive: {
-    backgroundColor: '#35c6eb15',
+    backgroundColor: '#1E4BA315',
     borderWidth: 1,
-    borderColor: '#35c6eb',
+    borderColor: '#1E4BA3',
   },
   filterChipText: {
     fontSize: 13,
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   filterChipTextActive: {
-    color: '#35c6eb',
+    color: '#1E4BA3',
     fontWeight: '600',
   },
   patientsList: {
@@ -876,7 +876,7 @@ const styles = StyleSheet.create({
   closeButton: {
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
     alignItems: 'center',
   },
   closeButtonText: {
@@ -885,3 +885,4 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+

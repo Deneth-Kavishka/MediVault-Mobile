@@ -1,27 +1,21 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
-  Dimensions,
-  ImageBackground,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Dimensions,
+    ImageBackground,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import {
-  useFadeIn,
-  usePressAnimation,
-  useScaleIn,
-  useSlideInBottom,
-  useSlideInLeft,
-  useSlideInRight,
-  useSlideInTop,
-  useStaggerAnimation,
+    useFadeIn,
+    usePressAnimation
 } from '../../utils/animations';
 
 const { width } = Dimensions.get('window');
@@ -35,19 +29,18 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ router }) => {
-  const headerAnimation = useSlideInTop(0);
-  const logoAnimation = useSlideInLeft(100);
-  const buttonAnimation = useSlideInRight(100);
+  // Simplified header animations - removed excessive slide animations
+  const headerAnimation = useFadeIn(0, 300);
   const { animatedStyle: pressStyle, onPressIn, onPressOut } = usePressAnimation();
 
   return (
     <Animated.View style={[styles.headerContainer, headerAnimation]}>
-      <Animated.View style={[styles.logoContainer, logoAnimation]}>
+      <View style={styles.logoContainer}>
         <MaterialCommunityIcons name="hospital-building" size={28} color="#007bff" />
         <Text style={styles.logoText}>MediVault</Text>
-      </Animated.View>
+      </View>
 
-      <Animated.View style={[styles.headerRight, buttonAnimation]}>
+      <View style={styles.headerRight}>
         <TouchableOpacity style={styles.themToggle}>
           <Feather name="moon" size={20} color="#374151" />
         </TouchableOpacity>
@@ -56,14 +49,17 @@ const Header: React.FC<HeaderProps> = ({ router }) => {
           <TouchableOpacity
             activeOpacity={0.8}
             style={styles.headerButton}
-            onPress={() => router.push('/(auth)/login')}
+            onPress={() => {
+              console.log('Sign In button pressed');
+              router.push('/(auth)/login' as any);
+            }}
             onPressIn={onPressIn}
             onPressOut={onPressOut}
           >
             <Text style={styles.headerButtonText}>Sign In</Text>
           </TouchableOpacity>
         </Animated.View>
-      </Animated.View>
+      </View>
     </Animated.View>
   );
 };
@@ -73,10 +69,8 @@ const Header: React.FC<HeaderProps> = ({ router }) => {
 // -----------------------------------------
 export default function LandingPage(): React.ReactElement {
   const router = useRouter();
-  const titleAnimation = useSlideInLeft(200);
-  const descriptionAnimation = useFadeIn(300, 400);
-  const heroAnimation = useScaleIn(400);
-  const buttonsAnimation = useSlideInBottom(500);
+  // Simplified hero animations - only essential fade-in
+  const heroAnimation = useFadeIn(0, 400);
   const { animatedStyle: primaryButtonPress, onPressIn: onPrimaryPress, onPressOut: onPrimaryRelease } = usePressAnimation();
   const { animatedStyle: secondaryButtonPress, onPressIn: onSecondaryPress, onPressOut: onSecondaryRelease } = usePressAnimation();
 
@@ -143,22 +137,22 @@ export default function LandingPage(): React.ReactElement {
           showsVerticalScrollIndicator={false}
         >
           {/* Main Content Card */}
-          <Animated.View style={[styles.contentCard, useFadeIn(100, 500)]}>
+          <Animated.View style={[styles.contentCard, heroAnimation]}>
             {/* Title Section */}
-            <Animated.View style={[styles.titleSection, titleAnimation]}>
+            <View style={styles.titleSection}>
               <Text style={styles.title}>Your Health,</Text>
               <Text style={styles.titleHighlight}>Digitally</Text>
               <Text style={styles.titleHighlight}>Connected</Text>
-            </Animated.View>
+            </View>
 
             {/* Description */}
-            <Animated.Text style={[styles.description, descriptionAnimation]}>
+            <Text style={styles.description}>
               MediVault brings together patients, doctors, pharmacists, and lab technicians in one 
               secure, comprehensive, and patient-centered healthcare management platform. Secure, efficient, and patient-centered.
-            </Animated.Text>
+            </Text>
 
             {/* Hero Image */}
-            <Animated.View style={heroAnimation}>
+            <View>
               <TouchableOpacity 
                 style={styles.heroImageContainer}
                 activeOpacity={0.9}
@@ -175,15 +169,18 @@ export default function LandingPage(): React.ReactElement {
                   </ImageBackground>
                 </View>
               </TouchableOpacity>
-            </Animated.View>
+            </View>
 
             {/* Action Buttons */}
-            <Animated.View style={[styles.buttonGroup, buttonsAnimation]}>
+            <View style={styles.buttonGroup}>
               <Animated.View style={[{ flex: 1 }, primaryButtonPress]}>
                 <TouchableOpacity
                   activeOpacity={0.8}
                   style={styles.buttonPrimary}
-                  onPress={() => router.push('/(auth)/register')}
+                  onPress={() => {
+                    console.log('Get Started button pressed');
+                    router.push('/(auth)/register' as any);
+                  }}
                   onPressIn={onPrimaryPress}
                   onPressOut={onPrimaryRelease}
                 >
@@ -195,53 +192,56 @@ export default function LandingPage(): React.ReactElement {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   style={styles.buttonSecondary}
-                  onPress={() => router.push('/(auth)/login')}
+                  onPress={() => {
+                    console.log('Sign In (secondary) button pressed');
+                    router.push('/(auth)/login' as any);
+                  }}
                   onPressIn={onSecondaryPress}
                   onPressOut={onSecondaryRelease}
                 >
-                  <Text style={styles.buttonSecondaryText}>Learn More</Text>
+                  <Text style={styles.buttonSecondaryText}>Sign In</Text>
                 </TouchableOpacity>
               </Animated.View>
-            </Animated.View>
+            </View>
 
-            {/* Stats Grid */}
+            {/* Stats Grid - Removed stagger animation for better performance */}
             <View style={styles.statsContainer}>
               {statsData.map((stat, index) => (
-                <Animated.View key={index} style={[styles.statCard, useStaggerAnimation(index, 100)]}>
+                <View key={index} style={styles.statCard}>
                   <View style={[styles.statIconContainer, { backgroundColor: `${stat.color}15` }]}>
                     <MaterialCommunityIcons name={stat.icon as any} size={24} color={stat.color} />
                   </View>
                   <Text style={styles.statCount}>{stat.count}</Text>
                   <Text style={styles.statLabel}>{stat.label}</Text>
-                </Animated.View>
+                </View>
               ))}
             </View>
           </Animated.View>
 
-          {/* Features Section */}
-          <Animated.View style={[styles.featuresSection, useSlideInBottom(800)]}>
-            <Animated.Text style={[styles.featuresTitle, useFadeIn(900, 400)]}>
+          {/* Features Section - Simplified animations */}
+          <View style={styles.featuresSection}>
+            <Text style={styles.featuresTitle}>
               Everything You Need for Modern Healthcare
-            </Animated.Text>
-            <Animated.Text style={[styles.featuresSubtitle, useFadeIn(1000, 400)]}>
+            </Text>
+            <Text style={styles.featuresSubtitle}>
               A complete platform designed to streamline healthcare workflows and improve patient outcomes
-            </Animated.Text>
+            </Text>
 
             <View style={styles.featuresGrid}>
               {featuresData.map((feature, index) => (
-                <Animated.View key={index} style={[styles.featureCard, useStaggerAnimation(index, 120)]}>
+                <View key={index} style={styles.featureCard}>
                   <View style={[styles.featureIconContainer, { backgroundColor: `${feature.color}15` }]}>
                     <MaterialCommunityIcons name={feature.icon as any} size={28} color={feature.color} />
                   </View>
                   <Text style={styles.featureTitle}>{feature.title}</Text>
                   <Text style={styles.featureDescription}>{feature.description}</Text>
-                </Animated.View>
+                </View>
               ))}
             </View>
-          </Animated.View>
+          </View>
 
-          {/* Call to Action Banner */}
-          <Animated.View style={[styles.ctaBanner, useScaleIn(1200)]}>
+          {/* Call to Action Banner - Removed scale animation */}
+          <View style={styles.ctaBanner}>
             <Text style={styles.ctaTitle}>Ready to Transform Healthcare Management?</Text>
             <Text style={styles.ctaSubtitle}>
               Join thousands of healthcare professionals and patients using MediVault
@@ -249,11 +249,14 @@ export default function LandingPage(): React.ReactElement {
             <TouchableOpacity
               activeOpacity={0.8}
               style={styles.ctaButton}
-              onPress={() => router.push('/(auth)/register')}
+              onPress={() => {
+                console.log('Start Now button pressed');
+                router.push('/(auth)/register' as any);
+              }}
             >
               <Text style={styles.ctaButtonText}>Start Now</Text>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
 
           {/* Footer */}
           <View style={styles.footer}>
@@ -328,7 +331,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#35c6ebff',
+    backgroundColor: '#1E4BA3ff',
   },
   headerButtonText: {
     fontSize: 14,
@@ -374,7 +377,7 @@ const styles = StyleSheet.create({
   titleHighlight: {
     fontSize: isSmallScreen ? 28 : 32,
     fontWeight: '800',
-    color: '#35c6ebff',
+    color: '#1E4BA3ff',
     lineHeight: isSmallScreen ? 34 : 38,
   },
   description: {
@@ -391,10 +394,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderRadius: 18,
     padding: 3,
-    backgroundColor: 'rgba(53, 198, 235, 0.15)',
+    backgroundColor: 'rgba(30, 75, 163, 0.15)',
     ...Platform.select({
       ios: {
-        shadowColor: '#35c6eb',
+        shadowColor: '#1E4BA3',
         shadowOpacity: 0.4,
         shadowRadius: 20,
         shadowOffset: { width: 0, height: 10 },
@@ -443,7 +446,7 @@ const styles = StyleSheet.create({
   },
   buttonPrimary: {
     flex: 1,
-    backgroundColor: '#35c6ebff',
+    backgroundColor: '#1E4BA3ff',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -471,10 +474,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#35c6ebff',
+    borderColor: '#1E4BA3ff',
   },
   buttonSecondaryText: {
-    color: '#35c6ebff',
+    color: '#1E4BA3ff',
     fontSize: 16,
     fontWeight: '700',
   },
@@ -595,14 +598,14 @@ const styles = StyleSheet.create({
 
   // Call to Action Banner
   ctaBanner: {
-    backgroundColor: '#35c6ebff',
+    backgroundColor: '#1E4BA3ff',
     borderRadius: 24,
     padding: isSmallScreen ? 28 : 32,
     marginTop: 20,
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        shadowColor:'#35c6ebff',
+        shadowColor:'#1E4BA3ff',
         shadowOpacity: 0.3,
         shadowRadius: 20,
         shadowOffset: { width: 0, height: 10 },
@@ -640,7 +643,7 @@ const styles = StyleSheet.create({
     }),
   },
   ctaButtonText: {
-    color: '#35c6ebff',
+    color: '#1E4BA3ff',
     fontSize: 16,
     fontWeight: '700',
   },
@@ -668,5 +671,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
 
 

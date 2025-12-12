@@ -162,3 +162,4 @@ const styles = StyleSheet.create({
   viewButton: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   viewButtonText: { fontSize: 12, fontWeight: '600', color: '#3B82F6' },
 });
+

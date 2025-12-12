@@ -112,7 +112,7 @@ export default function UploadResults() {
           <View key={test.id} style={styles.testCard}>
             <View style={styles.testInfo}>
               <View style={styles.testHeader}>
-                <MaterialCommunityIcons name="test-tube" size={32} color="#35c6eb" />
+                <MaterialCommunityIcons name="test-tube" size={32} color="#1E4BA3" />
                 <View style={styles.testDetails}>
                   <RNText style={styles.testName}>{test.testName}</RNText>
                   <RNText style={styles.patientName}>{test.patientName} • {test.patientNIC}</RNText>
@@ -485,3 +485,4 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
 });
+

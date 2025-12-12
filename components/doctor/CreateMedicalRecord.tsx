@@ -1,15 +1,15 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-    Alert,
-    Dimensions,
-    ImageBackground,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -231,7 +231,7 @@ export default function CreateMedicalRecord() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <MaterialCommunityIcons name="clipboard-text" size={32} color="#35c6eb" />
+          <MaterialCommunityIcons name="clipboard-text" size={32} color="#1E4BA3" />
           <Text style={styles.headerTitle}>Create Medical Record</Text>
           <Text style={styles.headerSubtitle}>Complete patient medical information</Text>
         </View>
@@ -536,7 +536,7 @@ export default function CreateMedicalRecord() {
               <Ionicons
                 name={showCommonDiagnoses ? 'chevron-up' : 'chevron-down'}
                 size={20}
-                color="#35c6eb"
+                color="#1E4BA3"
               />
             </TouchableOpacity>
 
@@ -551,7 +551,7 @@ export default function CreateMedicalRecord() {
                     <MaterialCommunityIcons
                       name="plus-circle-outline"
                       size={16}
-                      color="#35c6eb"
+                      color="#1E4BA3"
                     />
                     <Text style={styles.diagnosisChipText}>{diag}</Text>
                   </TouchableOpacity>
@@ -612,7 +612,7 @@ export default function CreateMedicalRecord() {
 
         {/* Info Card */}
         <View style={styles.infoCard}>
-          <Ionicons name="information-circle" size={24} color="#35c6eb" />
+          <Ionicons name="information-circle" size={24} color="#1E4BA3" />
           <Text style={styles.infoText}>
             Medical records are securely stored and accessible to authorized healthcare
             providers. Patients can view their records through their portal.
@@ -722,8 +722,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   genderButtonActive: {
-    backgroundColor: '#35c6eb',
-    borderColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
+    borderColor: '#1E4BA3',
   },
   genderText: {
     fontSize: 14,
@@ -736,16 +736,18 @@ const styles = StyleSheet.create({
   vitalSignsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
     gap: 12,
   },
   vitalSignCard: {
-    width: (width - 80) / 2,
+    width: '47.5%',
     backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     alignItems: 'center',
+    marginBottom: 4,
   },
   vitalSignLabel: {
     fontSize: 11,
@@ -796,13 +798,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#35c6eb',
+    borderColor: '#1E4BA3',
     gap: 6,
   },
   diagnosisChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#35c6eb',
+    color: '#1E4BA3',
   },
   actionButtons: {
     gap: 12,
@@ -849,12 +851,12 @@ const styles = StyleSheet.create({
   infoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(53, 198, 235, 0.1)',
+    backgroundColor: 'rgba(30, 75, 163, 0.1)',
     borderRadius: 12,
     padding: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: 'rgba(53, 198, 235, 0.3)',
+    borderColor: 'rgba(30, 75, 163, 0.3)',
   },
   infoText: {
     flex: 1,
@@ -863,3 +865,4 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
+

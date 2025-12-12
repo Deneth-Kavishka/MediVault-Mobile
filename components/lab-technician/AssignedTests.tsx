@@ -99,7 +99,7 @@ export default function AssignedTests() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'in_progress': return '#35c6eb';
+      case 'in_progress': return '#1E4BA3';
       case 'ordered': return '#F59E0B';
       default: return '#6B7280';
     }
@@ -146,8 +146,8 @@ export default function AssignedTests() {
             <RNText style={styles.statNumber}>{tests.filter(t => t.status === 'ordered').length}</RNText>
             <RNText style={styles.statLabel}>New</RNText>
           </View>
-          <View style={[styles.statBadge, { backgroundColor: '#35c6eb15' }]}>
-            <RNText style={[styles.statNumber, { color: '#35c6eb' }]}>{tests.filter(t => t.status === 'in_progress').length}</RNText>
+          <View style={[styles.statBadge, { backgroundColor: '#1E4BA315' }]}>
+            <RNText style={[styles.statNumber, { color: '#1E4BA3' }]}>{tests.filter(t => t.status === 'in_progress').length}</RNText>
             <RNText style={styles.statLabel}>In Progress</RNText>
           </View>
         </View>
@@ -255,7 +255,7 @@ export default function AssignedTests() {
                     </TouchableOpacity>
                   )}
                   <TouchableOpacity style={[styles.actionButton, styles.viewButton]}>
-                    <Ionicons name="eye" size={18} color="#35c6eb" />
+                    <Ionicons name="eye" size={18} color="#1E4BA3" />
                     <RNText style={styles.viewButtonText}>View Details</RNText>
                   </TouchableOpacity>
                 </View>
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterChipActive: {
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
   },
   filterText: {
     fontSize: 12,
@@ -466,10 +466,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
   },
   continueButton: {
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
   },
   viewButton: {
-    backgroundColor: '#35c6eb15',
+    backgroundColor: '#1E4BA315',
   },
   actionButtonText: {
     fontSize: 13,
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
   viewButtonText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#35c6eb',
+    color: '#1E4BA3',
   },
   emptyState: {
     backgroundColor: '#fff',
@@ -499,3 +499,4 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 });
+

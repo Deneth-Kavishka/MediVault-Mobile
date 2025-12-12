@@ -3,19 +3,19 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    ImageBackground,
-    Modal,
-    Platform,
-    RefreshControl,
-    Text as RNText,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  ImageBackground,
+  Modal,
+  Platform,
+  RefreshControl,
+  Text as RNText,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 import AssignedTests from '../../components/lab-technician/AssignedTests';
@@ -26,7 +26,7 @@ import UploadResults from '../../components/lab-technician/UploadResults';
 import AppointmentsView from '../../components/shared/AppointmentsView';
 import { sessionService } from '../../src/services/sessionService';
 import { storageService } from '../../src/services/storageService';
-import { useFadeIn, useSlideInTop, useStaggerAnimation } from '../../utils/animations';
+import { useFadeIn, useStaggerAnimation } from '../../utils/animations';
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 360;
@@ -86,7 +86,7 @@ export default function LabTechnicianDashboard() {
   });
 
   // Slow animations (600-1000ms)
-  const headerAnim = useSlideInTop(0, -30);
+  // ANIMATIONS REMOVED FOR BETTER PERFORMANCE
   const stat1Anim = useStaggerAnimation(0, 150);
   const stat2Anim = useStaggerAnimation(1, 150);
   const stat3Anim = useStaggerAnimation(2, 150);
@@ -192,7 +192,7 @@ export default function LabTechnicianDashboard() {
           onPress: async () => {
             try {
               await sessionService.clearSession();
-              router.replace('/(auth)/login');
+              router.replace('/(auth)/login' as any);
             } catch (error) {
               console.error('Error logging out:', error);
               Alert.alert('Error', 'Failed to logout. Please try again.');
@@ -291,7 +291,7 @@ export default function LabTechnicianDashboard() {
       case 'completed':
         return '#10B981';
       case 'in_progress':
-        return '#35c6eb';
+        return '#1E4BA3';
       case 'ordered':
         return '#F59E0B';
       case 'cancelled':
@@ -324,7 +324,7 @@ export default function LabTechnicianDashboard() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#35c6eb" />
+        <ActivityIndicator size="large" color="#1E4BA3" />
       </View>
     );
   }
@@ -334,25 +334,25 @@ export default function LabTechnicianDashboard() {
       {/* Stats Grid */}
       <View style={styles.statsGrid}>
         <Animated.View style={[styles.statCard, styles.transparentCard, stat1Anim]}>
-          <MaterialCommunityIcons name="test-tube" size={28} color="#35c6eb" />
+          <MaterialCommunityIcons name="test-tube" size={28} color="#1E4BA3" />
           <RNText style={styles.statNumberTransparent}>{stats.assignedTests}</RNText>
           <RNText style={styles.statLabelTransparent}>Assigned Tests</RNText>
         </Animated.View>
 
         <Animated.View style={[styles.statCard, styles.transparentCard, stat2Anim]}>
-          <MaterialCommunityIcons name="progress-clock" size={28} color="#35c6eb" />
+          <MaterialCommunityIcons name="progress-clock" size={28} color="#1E4BA3" />
           <RNText style={styles.statNumberTransparent}>{stats.inProgressTests}</RNText>
           <RNText style={styles.statLabelTransparent}>In Progress</RNText>
         </Animated.View>
 
         <Animated.View style={[styles.statCard, styles.transparentCard, stat3Anim]}>
-          <MaterialCommunityIcons name="check-circle" size={28} color="#35c6eb" />
+          <MaterialCommunityIcons name="check-circle" size={28} color="#1E4BA3" />
           <RNText style={styles.statNumberTransparent}>{stats.completedToday}</RNText>
           <RNText style={styles.statLabelTransparent}>Completed Today</RNText>
         </Animated.View>
 
         <Animated.View style={[styles.statCard, styles.transparentCard, stat4Anim]}>
-          <MaterialCommunityIcons name="alert-circle" size={28} color="#35c6eb" />
+          <MaterialCommunityIcons name="alert-circle" size={28} color="#1E4BA3" />
           <RNText style={styles.statNumberTransparent}>{stats.abnormalResults}</RNText>
           <RNText style={styles.statLabelTransparent}>Abnormal Results</RNText>
         </Animated.View>
@@ -363,32 +363,32 @@ export default function LabTechnicianDashboard() {
         <RNText style={styles.sectionTitle}>Quick Actions</RNText>
         <View style={styles.quickActionsGrid}>
           <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveNav('assigned-tests')}>
-            <MaterialCommunityIcons name="clipboard-list" size={32} color="#35c6eb" />
+            <MaterialCommunityIcons name="clipboard-list" size={32} color="#1E4BA3" />
             <RNText style={styles.quickActionText}>Assigned Tests</RNText>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveNav('upload-results')}>
-            <MaterialCommunityIcons name="upload" size={32} color="#35c6eb" />
+            <MaterialCommunityIcons name="upload" size={32} color="#1E4BA3" />
             <RNText style={styles.quickActionText}>Upload Results</RNText>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveNav('flag-abnormal')}>
-            <MaterialCommunityIcons name="alert-circle" size={32} color="#35c6eb" />
+            <MaterialCommunityIcons name="alert-circle" size={32} color="#1E4BA3" />
             <RNText style={styles.quickActionText}>Abnormal Results</RNText>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveNav('history')}>
-            <MaterialCommunityIcons name="history" size={32} color="#35c6eb" />
+            <MaterialCommunityIcons name="history" size={32} color="#1E4BA3" />
             <RNText style={styles.quickActionText}>Test History</RNText>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveNav('appointments')}>
-            <MaterialCommunityIcons name="calendar-check" size={32} color="#35c6eb" />
+            <MaterialCommunityIcons name="calendar-check" size={32} color="#1E4BA3" />
             <RNText style={styles.quickActionText}>Appointments</RNText>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveNav('notifications')}>
-            <MaterialCommunityIcons name="bell-ring" size={32} color="#35c6eb" />
+            <MaterialCommunityIcons name="bell-ring" size={32} color="#1E4BA3" />
             <RNText style={styles.quickActionText}>Notifications</RNText>
           </TouchableOpacity>
         </View>
@@ -534,8 +534,8 @@ export default function LabTechnicianDashboard() {
       >
         <View style={styles.overlay} />
 
-        {/* Header */}
-        <Animated.View style={[styles.header, headerAnim]}>
+        {/* Header - Animation removed for performance */}
+        <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity
               style={styles.backButton}
@@ -544,53 +544,108 @@ export default function LabTechnicianDashboard() {
                 router.replace('/(auth)/login' as any);
               }}
             >
-              <Ionicons name="arrow-back" size={24} color="#1F2937" />
+              <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
             <View>
-              <RNText style={styles.greeting}>Welcome back,</RNText>
-              <RNText style={styles.technicianName}>{userInfo?.fullName || 'Lab Technician'}</RNText>
+              <RNText style={styles.greeting}>Welcome Back, Lab Technician</RNText>
+              <RNText style={styles.userName}>{userInfo?.fullName || 'Lab Technician'}</RNText>
             </View>
           </View>
-          <View style={styles.headerButtons}>
-            <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons name="notifications-outline" size={24} color="#1F2937" />
-              <View style={styles.notificationBadge}>
-                <RNText style={styles.notificationBadgeText}>{stats.abnormalResults}</RNText>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <Ionicons name="log-out-outline" size={22} color="#EF4444" />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
 
         {/* Navigation Bar */}
-        <View style={styles.tabContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {[
-              { key: 'dashboard', label: 'Dashboard', icon: 'grid-outline' },
-              { key: 'assigned-tests', label: 'Assigned Tests', icon: 'clipboard-outline' },
-              { key: 'upload-results', label: 'Upload Results', icon: 'cloud-upload-outline' },
-              { key: 'flag-abnormal', label: 'Abnormal Results', icon: 'alert-circle-outline' },
-              { key: 'notifications', label: 'Notifications', icon: 'notifications-outline' },
-              { key: 'history', label: 'Test History', icon: 'time-outline' },
-              { key: 'appointments', label: 'Appointments', icon: 'calendar-outline' },
-            ].map(nav => (
-              <TouchableOpacity
-                key={nav.key}
-                style={[styles.tab, activeNav === nav.key && styles.tabActive]}
-                onPress={() => setActiveNav(nav.key as any)}
-              >
-                <Ionicons
-                  name={nav.icon as any}
-                  size={20}
-                  color={activeNav === nav.key ? '#35c6eb' : '#6B7280'}
-                />
-                <RNText style={[styles.tabText, activeNav === nav.key && styles.tabTextActive]}>
-                  {nav.label}
-                </RNText>
-              </TouchableOpacity>
-            ))}
+        <View style={styles.navContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.navScrollContent}
+          >
+            <TouchableOpacity 
+              style={[styles.navItem, activeNav === 'dashboard' && styles.navItemActive]}
+              onPress={() => setActiveNav('dashboard')}
+            >
+              <MaterialCommunityIcons 
+                name="view-dashboard" 
+                size={20} 
+                color={activeNav === 'dashboard' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeNav === 'dashboard' && styles.navTextActive]}>Dashboard</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeNav === 'assigned-tests' && styles.navItemActive]}
+              onPress={() => setActiveNav('assigned-tests')}
+            >
+              <MaterialCommunityIcons 
+                name="clipboard-list" 
+                size={20} 
+                color={activeNav === 'assigned-tests' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeNav === 'assigned-tests' && styles.navTextActive]}>Assigned Tests</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeNav === 'upload-results' && styles.navItemActive]}
+              onPress={() => setActiveNav('upload-results')}
+            >
+              <MaterialCommunityIcons 
+                name="cloud-upload" 
+                size={20} 
+                color={activeNav === 'upload-results' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeNav === 'upload-results' && styles.navTextActive]}>Upload Results</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeNav === 'flag-abnormal' && styles.navItemActive]}
+              onPress={() => setActiveNav('flag-abnormal')}
+            >
+              <MaterialCommunityIcons 
+                name="alert-circle" 
+                size={20} 
+                color={activeNav === 'flag-abnormal' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeNav === 'flag-abnormal' && styles.navTextActive]}>Abnormal Results</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeNav === 'notifications' && styles.navItemActive]}
+              onPress={() => setActiveNav('notifications')}
+            >
+              <Ionicons 
+                name="notifications-outline" 
+                size={20} 
+                color={activeNav === 'notifications' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeNav === 'notifications' && styles.navTextActive]}>Notifications</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeNav === 'history' && styles.navItemActive]}
+              onPress={() => setActiveNav('history')}
+            >
+              <MaterialCommunityIcons 
+                name="history" 
+                size={20} 
+                color={activeNav === 'history' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeNav === 'history' && styles.navTextActive]}>Test History</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeNav === 'appointments' && styles.navItemActive]}
+              onPress={() => setActiveNav('appointments')}
+            >
+              <MaterialCommunityIcons 
+                name="calendar-check" 
+                size={20} 
+                color={activeNav === 'appointments' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeNav === 'appointments' && styles.navTextActive]}>Appointments</RNText>
+            </TouchableOpacity>
           </ScrollView>
         </View>
 
@@ -854,8 +909,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
-    paddingBottom: 16,
+    paddingTop: Platform.OS === 'android' ? 40 : 60,
+    paddingBottom: 20,
+    backgroundColor: '#1E4BA3',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -864,26 +920,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-      },
-      android: { elevation: 2 },
-    }),
   },
   greeting: {
-    fontSize: isSmallScreen ? 14 : 16,
-    color: '#6B7280',
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '500',
+  },
+  userName: {
+    fontSize: 20,
+    color: '#fff',
+    fontWeight: '700',
+    marginTop: 4,
   },
   technicianName: {
     fontSize: isSmallScreen ? 20 : 24,
@@ -909,18 +962,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#EF4444',
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-      },
-      android: { elevation: 2 },
-    }),
   },
   notificationBadge: {
     position: 'absolute',
@@ -938,6 +982,42 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
+  navContainer: {
+    backgroundColor: Platform.select({
+      ios: 'rgba(255, 255, 255, 0.95)',
+      android: '#FFFFFF',
+      default: '#FFFFFF',
+    }),
+  },
+  navScrollContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  navItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#F9FAFB',
+    marginRight: 8,
+    gap: 8,
+  },
+  navItemActive: {
+    backgroundColor: '#1E4BA315',
+    borderWidth: 1,
+    borderColor: '#1E4BA3',
+  },
+  navText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  navTextActive: {
+    color: '#1E4BA3',
+    fontWeight: '600',
+  },
   tabContainer: {
     paddingHorizontal: 20,
     marginBottom: 16,
@@ -953,7 +1033,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tabActive: {
-    backgroundColor: 'rgba(53, 198, 235, 0.15)',
+    backgroundColor: 'rgba(30, 75, 163, 0.15)',
   },
   tabText: {
     fontSize: 14,
@@ -961,7 +1041,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   tabTextActive: {
-    color: '#35c6eb',
+    color: '#1E4BA3',
     fontWeight: '600',
   },
   content: {
@@ -993,12 +1073,12 @@ const styles = StyleSheet.create({
   transparentCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderWidth: 2,
-    borderColor: 'rgba(53, 198, 235, 0.4)',
+    borderColor: 'rgba(30, 75, 163, 0.4)',
   },
   statNumberTransparent: {
     fontSize: isSmallScreen ? 28 : 32,
     fontWeight: '700',
-    color: '#35c6eb',
+    color: '#1E4BA3',
     marginTop: 8,
     marginBottom: 4,
   },
@@ -1024,7 +1104,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 14,
-    color: '#35c6eb',
+    color: '#1E4BA3',
     fontWeight: '600',
   },
   quickActionsGrid: {
@@ -1168,7 +1248,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   filterButtonActive: {
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
   },
   filterText: {
     fontSize: 12,
@@ -1302,8 +1382,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkboxChecked: {
-    backgroundColor: '#35c6eb',
-    borderColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
+    borderColor: '#1E4BA3',
   },
   checkboxLabel: {
     fontSize: 15,
@@ -1345,7 +1425,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   startButton: {
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
   },
   uploadButton: {
     backgroundColor: '#10B981',
@@ -1364,3 +1444,4 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
 });
+

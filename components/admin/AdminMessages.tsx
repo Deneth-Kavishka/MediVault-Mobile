@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   composeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -376,9 +376,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tabActive: {
-    backgroundColor: '#35c6eb15',
+    backgroundColor: '#1E4BA315',
     borderWidth: 1,
-    borderColor: '#35c6eb',
+    borderColor: '#1E4BA3',
   },
   tabText: {
     fontSize: 13,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   tabTextActive: {
-    color: '#35c6eb',
+    color: '#1E4BA3',
     fontWeight: '600',
   },
   badge: {
@@ -550,3 +550,4 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
 });
+

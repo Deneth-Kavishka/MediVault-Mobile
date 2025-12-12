@@ -38,7 +38,11 @@ interface ScannedPrescription {
   specialInstructions?: string;
 }
 
-export default function QRScanner() {
+interface QRScannerProps {
+  onBack?: () => void;
+}
+
+export default function QRScanner({ onBack }: QRScannerProps) {
   const [hasPermission, setHasPermission] = React.useState<boolean | null>(null);
   const [isScanning, setIsScanning] = React.useState(false);
   const [scannedPrescription, setScannedPrescription] = React.useState<ScannedPrescription | null>(null);
@@ -168,8 +172,15 @@ export default function QRScanner() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <RNText style={styles.headerTitle}>QR Code Scanner</RNText>
-        <RNText style={styles.headerSubtitle}>Scan prescription QR codes for verification</RNText>
+        {onBack && (
+          <TouchableOpacity style={styles.backButton} onPress={onBack}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+        )}
+        <View style={styles.headerContent}>
+          <RNText style={styles.headerTitle}>QR Code Scanner</RNText>
+          <RNText style={styles.headerSubtitle}>Scan prescription QR codes for verification</RNText>
+        </View>
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
@@ -400,10 +411,24 @@ const styles = StyleSheet.create({
     paddingBottom: 16, 
     borderBottomWidth: 1, 
     borderBottomColor: '#E5E7EB',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
     ...Platform.select({
       ios: { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
       android: { elevation: 2 }
     })
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3B82F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerContent: {
+    flex: 1,
   },
   headerTitle: { fontSize: 24, fontWeight: '800', color: '#1F2937', marginBottom: 4 },
   headerSubtitle: { fontSize: 14, color: '#6B7280' },
@@ -567,3 +592,4 @@ const styles = StyleSheet.create({
   historyStatusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   historyStatusText: { fontSize: 10, fontWeight: '700' },
 });
+

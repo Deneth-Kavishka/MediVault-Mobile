@@ -67,3 +67,4 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 12, fontWeight: '600', color: '#6B7280' },
   dateText: { fontSize: 12, color: '#9CA3AF', marginLeft: 'auto' },
 });
+

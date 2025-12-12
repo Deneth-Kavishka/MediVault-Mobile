@@ -3,27 +3,26 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  ImageBackground,
-  Modal,
-  Platform,
-  RefreshControl,
-  Text as RNText,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    ImageBackground,
+    Modal,
+    Platform,
+    RefreshControl,
+    Text as RNText,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import Animated from 'react-native-reanimated';
 import DispensingHistory from '../../components/pharmacist/DispensingHistory';
 import QRScanner from '../../components/pharmacist/QRScanner';
 import AppointmentsView from '../../components/shared/AppointmentsView';
 import { sessionService } from '../../src/services/sessionService';
 import { storageService } from '../../src/services/storageService';
-import { useFadeIn, useSlideInTop, useStaggerAnimation } from '../../utils/animations';
+// Animation imports removed - dashboard cards don't need animations for better performance
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 360;
@@ -86,12 +85,7 @@ export default function PharmacistDashboardScreen() {
   });
 
   // Slow animations (600-1000ms)
-  const headerAnim = useSlideInTop(0, -30);
-  const stat1Anim = useStaggerAnimation(0, 150);
-  const stat2Anim = useStaggerAnimation(1, 150);
-  const stat3Anim = useStaggerAnimation(2, 150);
-  const stat4Anim = useStaggerAnimation(3, 150);
-  const contentAnim = useFadeIn(600, 800);
+  // ANIMATIONS REMOVED FOR BETTER PERFORMANCE
 
   const [medicines, setMedicines] = useState<Medicine[]>([
     {
@@ -209,7 +203,7 @@ export default function PharmacistDashboardScreen() {
           onPress: async () => {
             try {
               await sessionService.clearSession();
-              router.replace('/(auth)/login');
+              router.replace('/(auth)/login' as any);
             } catch (error) {
               console.error('Error logging out:', error);
               Alert.alert('Error', 'Failed to logout. Please try again.');
@@ -323,43 +317,43 @@ export default function PharmacistDashboardScreen() {
 
   const renderOverview = () => (
     <View>
-      {/* Stats Grid */}
+      {/* Stats Grid - Animations removed for performance */}
       <View style={styles.statsGrid}>
-        <Animated.View style={[styles.statCard, stat1Anim]}>
+        <View style={styles.statCard}>
           <View style={[styles.statIconContainer, { backgroundColor: '#3B82F615' }]}>
             <MaterialCommunityIcons name="pill" size={28} color="#3B82F6" />
           </View>
           <RNText style={styles.statValue}>{stats.totalMedicines}</RNText>
           <RNText style={styles.statLabel}>Total Medicines</RNText>
-        </Animated.View>
+        </View>
 
-        <Animated.View style={[styles.statCard, stat2Anim]}>
+        <View style={styles.statCard}>
           <View style={[styles.statIconContainer, { backgroundColor: '#EF444415' }]}>
             <MaterialCommunityIcons name="alert-circle" size={28} color="#EF4444" />
           </View>
           <RNText style={styles.statValue}>{stats.lowStockItems}</RNText>
           <RNText style={styles.statLabel}>Low Stock</RNText>
-        </Animated.View>
+        </View>
 
-        <Animated.View style={[styles.statCard, stat3Anim]}>
+        <View style={styles.statCard}>
           <View style={[styles.statIconContainer, { backgroundColor: '#10B98115' }]}>
             <MaterialCommunityIcons name="clipboard-text" size={28} color="#10B981" />
           </View>
           <RNText style={styles.statValue}>{stats.prescriptionsToday}</RNText>
           <RNText style={styles.statLabel}>Today's Rx</RNText>
-        </Animated.View>
+        </View>
 
-        <Animated.View style={[styles.statCard, stat4Anim]}>
+        <View style={styles.statCard}>
           <View style={[styles.statIconContainer, { backgroundColor: '#F59E0B15' }]}>
             <MaterialCommunityIcons name="refresh-circle" size={28} color="#F59E0B" />
           </View>
           <RNText style={styles.statValue}>{stats.pendingReorders}</RNText>
           <RNText style={styles.statLabel}>Reorders</RNText>
-        </Animated.View>
+        </View>
       </View>
 
-      {/* Quick Actions */}
-      <Animated.View style={[styles.section, contentAnim]}>
+      {/* Quick Actions - Animation removed for performance */}
+      <View style={styles.section}>
         <RNText style={styles.sectionTitle}>Quick Actions</RNText>
         <View style={styles.quickActionsGrid}>
           <TouchableOpacity style={styles.actionCard} onPress={handleScanQR}>
@@ -388,11 +382,11 @@ export default function PharmacistDashboardScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionCard} onPress={() => setActiveNav('appointments')}>
-            <MaterialCommunityIcons name="calendar-check" size={32} color="#35c6eb" />
+            <MaterialCommunityIcons name="calendar-check" size={32} color="#1E4BA3" />
             <RNText style={styles.actionText}>Appointments</RNText>
           </TouchableOpacity>
         </View>
-      </Animated.View>
+      </View>
 
       {/* Recent Stock Alerts */}
       <View style={styles.section}>
@@ -599,7 +593,7 @@ export default function PharmacistDashboardScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#35c6ebff" />
+        <ActivityIndicator size="large" color="#1E4BA3ff" />
       </View>
     );
   }
@@ -614,8 +608,8 @@ export default function PharmacistDashboardScreen() {
       >
         <View style={styles.gradientOverlay} />
 
-        {/* Header */}
-        <Animated.View style={[styles.header, headerAnim]}>
+        {/* Header - Animation removed for performance */}
+        <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity 
               style={styles.backButton} 
@@ -624,7 +618,7 @@ export default function PharmacistDashboardScreen() {
                 router.replace('/(auth)/login' as any);
               }}
             >
-              <Ionicons name="arrow-back" size={24} color="#1F2937" />
+              <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
             <View>
               <RNText style={styles.greeting}>Welcome Back, Pharmacist</RNText>
@@ -632,43 +626,82 @@ export default function PharmacistDashboardScreen() {
             </View>
           </View>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={22} color="#EF4444" />
+            <Ionicons name="log-out-outline" size={24} color="#fff" />
           </TouchableOpacity>
-        </Animated.View>
+        </View>
 
-        {/* Tabs */}
-        <View style={styles.tabContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {[
-              { key: 'overview', label: 'Overview', icon: 'home-outline' },
-              { key: 'inventory', label: 'Inventory', icon: 'cube-outline' },
-              { key: 'prescriptions', label: 'Prescriptions', icon: 'document-text-outline' },
-              { key: 'alerts', label: 'Alerts', icon: 'notifications-outline' },
-            ].map(tab => (
-              <TouchableOpacity
-                key={tab.key}
-                style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-                onPress={() => setActiveTab(tab.key as any)}
-              >
-                <Ionicons 
-                  name={tab.icon as any} 
-                  size={20} 
-                  color={activeTab === tab.key ? '#10B981' : '#6B7280'} 
-                />
-                <RNText style={[
-                  styles.tabText,
-                  activeTab === tab.key && styles.tabTextActive
-                ]}>
-                  {tab.label}
-                </RNText>
-              </TouchableOpacity>
-            ))}
+        {/* Navigation Bar */}
+        <View style={styles.navContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.navScrollContent}
+          >
+            <TouchableOpacity 
+              style={[styles.navItem, activeTab === 'overview' && styles.navItemActive]}
+              onPress={() => {
+                setActiveTab('overview');
+                setActiveNav('dashboard');
+              }}
+            >
+              <MaterialCommunityIcons 
+                name="view-dashboard" 
+                size={20} 
+                color={activeTab === 'overview' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeTab === 'overview' && styles.navTextActive]}>Dashboard</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeTab === 'inventory' && styles.navItemActive]}
+              onPress={() => {
+                setActiveTab('inventory');
+                setActiveNav('dashboard');
+              }}
+            >
+              <MaterialCommunityIcons 
+                name="package-variant" 
+                size={20} 
+                color={activeTab === 'inventory' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeTab === 'inventory' && styles.navTextActive]}>Inventory</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeTab === 'prescriptions' && styles.navItemActive]}
+              onPress={() => {
+                setActiveTab('prescriptions');
+                setActiveNav('dashboard');
+              }}
+            >
+              <MaterialCommunityIcons 
+                name="prescription" 
+                size={20} 
+                color={activeTab === 'prescriptions' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeTab === 'prescriptions' && styles.navTextActive]}>Prescriptions</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeTab === 'alerts' && styles.navItemActive]}
+              onPress={() => {
+                setActiveTab('alerts');
+                setActiveNav('dashboard');
+              }}
+            >
+              <Ionicons 
+                name="notifications-outline" 
+                size={20} 
+                color={activeTab === 'alerts' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeTab === 'alerts' && styles.navTextActive]}>Alerts</RNText>
+            </TouchableOpacity>
           </ScrollView>
         </View>
 
         {/* Content */}
         {activeNav === 'qr-scanner' ? (
-          <QRScanner />
+          <QRScanner onBack={() => setActiveNav('dashboard')} />
         ) : activeNav === 'history' ? (
           <DispensingHistory />
         ) : activeNav === 'appointments' ? (
@@ -768,8 +801,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
-    paddingBottom: 16,
+    paddingTop: Platform.OS === 'android' ? 40 : 60,
+    paddingBottom: 20,
+    backgroundColor: '#1E4BA3',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -778,49 +812,67 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-      },
-      android: { elevation: 2 },
-    }),
   },
   greeting: {
-    fontSize: isSmallScreen ? 14 : 16,
-    color: '#6B7280',
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '500',
   },
   userName: {
-    fontSize: isSmallScreen ? 20 : 24,
+    fontSize: 20,
+    color: '#fff',
     fontWeight: '700',
-    color: '#1F2937',
     marginTop: 4,
   },
   logoutButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#EF4444',
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-      },
-      android: { elevation: 2 },
+  },
+  navContainer: {
+    backgroundColor: Platform.select({
+      ios: 'rgba(255, 255, 255, 0.95)',
+      android: '#FFFFFF',
+      default: '#FFFFFF',
     }),
+  },
+  navScrollContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  navItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#F9FAFB',
+    marginRight: 8,
+    gap: 8,
+  },
+  navItemActive: {
+    backgroundColor: '#1E4BA315',
+    borderWidth: 1,
+    borderColor: '#1E4BA3',
+  },
+  navText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  navTextActive: {
+    color: '#1E4BA3',
+    fontWeight: '600',
   },
   tabContainer: {
     paddingHorizontal: 20,
@@ -1321,3 +1373,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+

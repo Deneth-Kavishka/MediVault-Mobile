@@ -385,12 +385,12 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: '#35c6eb',
+        shadowColor: '#1E4BA3',
         shadowOpacity: 0.3,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 4 },
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterTabActive: {
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
   },
   filterText: {
     fontSize: 14,
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   bookModalButton: {
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
   },
   bookModalButtonText: {
     fontSize: 16,
@@ -617,3 +617,4 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+

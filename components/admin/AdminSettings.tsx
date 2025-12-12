@@ -74,7 +74,7 @@ export default function AdminSettings() {
         {/* General Settings */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <MaterialCommunityIcons name="cog" size={20} color="#35c6ebff" />
+            <MaterialCommunityIcons name="cog" size={20} color="#1E4BA3ff" />
             <RNText style={styles.sectionTitle}>General Settings</RNText>
           </View>
 
@@ -87,7 +87,7 @@ export default function AdminSettings() {
               <Switch
                 value={maintenanceMode}
                 onValueChange={setMaintenanceMode}
-                trackColor={{ false: '#E5E7EB', true: '#35c6ebff' }}
+                trackColor={{ false: '#E5E7EB', true: '#1E4BA3ff' }}
                 thumbColor="#fff"
               />
             </View>
@@ -102,7 +102,7 @@ export default function AdminSettings() {
               <Switch
                 value={darkMode}
                 onValueChange={setDarkMode}
-                trackColor={{ false: '#E5E7EB', true: '#35c6ebff' }}
+                trackColor={{ false: '#E5E7EB', true: '#1E4BA3ff' }}
                 thumbColor="#fff"
               />
             </View>
@@ -117,7 +117,7 @@ export default function AdminSettings() {
               <Switch
                 value={autoBackup}
                 onValueChange={setAutoBackup}
-                trackColor={{ false: '#E5E7EB', true:'#35c6ebff' }}
+                trackColor={{ false: '#E5E7EB', true:'#1E4BA3ff' }}
                 thumbColor="#fff"
               />
             </View>
@@ -140,7 +140,7 @@ export default function AdminSettings() {
               <Switch
                 value={notificationsEnabled}
                 onValueChange={setNotificationsEnabled}
-                trackColor={{ false: '#E5E7EB', true: '#35c6ebff'}}
+                trackColor={{ false: '#E5E7EB', true: '#1E4BA3ff'}}
                 thumbColor="#fff"
               />
             </View>
@@ -155,7 +155,7 @@ export default function AdminSettings() {
               <Switch
                 value={emailNotifications}
                 onValueChange={setEmailNotifications}
-                trackColor={{ false: '#E5E7EB', true: '#35c6ebff' }}
+                trackColor={{ false: '#E5E7EB', true: '#1E4BA3ff' }}
                 thumbColor="#fff"
               />
             </View>
@@ -170,7 +170,7 @@ export default function AdminSettings() {
               <Switch
                 value={smsNotifications}
                 onValueChange={setSmsNotifications}
-                trackColor={{ false: '#E5E7EB', true: '#35c6ebff' }}
+                trackColor={{ false: '#E5E7EB', true: '#1E4BA3ff' }}
                 thumbColor="#fff"
               />
             </View>
@@ -193,7 +193,7 @@ export default function AdminSettings() {
               <Switch
                 value={twoFactorAuth}
                 onValueChange={setTwoFactorAuth}
-                trackColor={{ false: '#E5E7EB', true:'#35c6ebff' }}
+                trackColor={{ false: '#E5E7EB', true:'#1E4BA3ff' }}
                 thumbColor="#fff"
               />
             </View>
@@ -263,7 +263,7 @@ export default function AdminSettings() {
           <View style={styles.actionCard}>
             <TouchableOpacity style={styles.actionButton} onPress={handleBackup}>
               <View style={[styles.actionIconContainer, { backgroundColor: '#007AFF15' }]}>
-                <MaterialCommunityIcons name="backup-restore" size={24} color='#35c6ebff' />
+                <MaterialCommunityIcons name="backup-restore" size={24} color='#1E4BA3ff' />
               </View>
               <View style={styles.actionInfo}>
                 <RNText style={styles.actionLabel}>Backup Database</RNText>
@@ -612,3 +612,4 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
 });
+

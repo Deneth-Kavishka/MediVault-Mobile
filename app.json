@@ -45,7 +45,9 @@
         {
           "cameraPermission": "Allow MediVault to access your camera to scan prescription QR codes."
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

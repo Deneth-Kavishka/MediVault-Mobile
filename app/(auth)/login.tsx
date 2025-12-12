@@ -47,23 +47,35 @@ export default function LoginScreen() {
     const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
     const testUsernames = ['admin123', 'doctor123', 'patient123', 'pharmacists123', 'labtec123'];
 
-    if (!email) e.email = 'Email is required';
-    else if (!testUsernames.includes(email.toLowerCase()) && !emailRegex.test(email)) {
+    if (!email) {
+      e.email = 'Email is required';
+    } else if (!testUsernames.includes(email.toLowerCase()) && !emailRegex.test(email)) {
       e.email = 'Enter a valid email';
     }
 
-    if (!password) e.password = 'Password is required';
-    else if (password.length < 6) e.password = 'Password must be at least 6 characters';
+    if (!password) {
+      e.password = 'Password is required';
+    } else if (password.length < 6) {
+      e.password = 'Password must be at least 6 characters';
+    }
 
     setErrors(e);
-    return Object.keys(e).length === 0;
+    const isValid = Object.keys(e).length === 0;
+    console.log('Validation result:', { isValid, errors: e, email, password: '***' });
+    return isValid;
   };
   const handleLogin = async () => {
-    if (!validate()) return;
+    console.log('handleLogin called');
+    if (!validate()) {
+      console.log('Validation failed');
+      return;
+    }
+    console.log('Validation passed, starting login...');
     setLoading(true);
 
     // Testing mode: Check username for role-based navigation
     const username = email.toLowerCase();
+    console.log('Username:', username);
     
     if (username === 'admin123' || username === 'doctor123' || username === 'patient123' || username === 'pharmacists123' || username === 'labtec123') {
       try {
@@ -92,11 +104,21 @@ export default function LoginScreen() {
         await storageService.setSessionExpiry(expiryTime);
         await storageService.setRememberMe(rememberMe);
         
-        // Update authentication state (this will trigger navigation in _layout.tsx)
-        // The _layout.tsx will handle the redirect based on user role
         setLoading(false);
         
-        // Navigation will happen automatically after storage is updated
+        // Navigate based on role immediately after storing credentials
+        if (mockUser.role === 'admin') {
+          router.replace('/(tabs)/admin-dashboard' as any);
+        } else if (mockUser.role === 'doctor') {
+          router.replace('/(tabs)/doctor-dashboard' as any);
+        } else if (mockUser.role === 'pharmacist') {
+          router.replace('/(tabs)/pharmacist-dashboard' as any);
+        } else if (mockUser.role === 'lab_technician') {
+          router.replace('/(tabs)/lab-technician-dashboard' as any);
+        } else {
+          router.replace('/(tabs)' as any);
+        }
+        
         return;
       } catch (error: any) {
         setLoading(false);
@@ -128,16 +150,23 @@ export default function LoginScreen() {
       await storageService.setSessionExpiry(expiryTime);
       await storageService.setRememberMe(rememberMe);
 
-      // Navigate based on role
-      if (role === 'doctor') {
+      setLoading(false);
+
+      // Navigate based on user role from API response
+      if (user.role === 'admin') {
+        router.replace('/(tabs)/admin-dashboard' as any);
+      } else if (user.role === 'doctor') {
         router.replace('/(tabs)/doctor-dashboard' as any);
+      } else if (user.role === 'pharmacist') {
+        router.replace('/(tabs)/pharmacist-dashboard' as any);
+      } else if (user.role === 'lab_technician') {
+        router.replace('/(tabs)/lab-technician-dashboard' as any);
       } else {
-        router.replace('/(tabs)');
+        router.replace('/(tabs)' as any);
       }
 
     } catch (error: any) {
       Alert.alert('Login Failed', error.response?.data?.message || 'An error occurred');
-    } finally {
       setLoading(false);
     }
   };
@@ -156,8 +185,13 @@ export default function LoginScreen() {
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => {
-              console.log('Back button pressed');
-              router.back();
+              console.log('Back button pressed - navigating to landing page');
+              try {
+                router.push('/landing-page');
+              } catch (error) {
+                console.log('Error navigating:', error);
+                router.back();
+              }
             }}
             activeOpacity={0.7}
           >
@@ -233,6 +267,11 @@ export default function LoginScreen() {
                           setPassword(text);
                           if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
                         }}
+                        onSubmitEditing={(e) => {
+                          e.preventDefault?.();
+                          handleLogin();
+                        }}
+                        returnKeyType="go"
                       />
                       <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
                         <Ionicons 
@@ -269,7 +308,12 @@ export default function LoginScreen() {
                   <TouchableOpacity
                     style={[styles.loginButton, loading && styles.loginButtonDisabled]}
                     disabled={loading}
-                    onPress={handleLogin}
+                    onPress={(e) => {
+                      e.preventDefault?.();
+                      e.stopPropagation?.();
+                      console.log('Sign In button clicked');
+                      handleLogin();
+                    }}
                     activeOpacity={0.8}
                   >
                     <View style={styles.buttonContent}>
@@ -384,12 +428,12 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#35c6ebff',
+    backgroundColor: '#1E4BA3ff',
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({
       ios: {
-        shadowColor:  '#35c6ebff',
+        shadowColor:  '#1E4BA3ff',
         shadowOpacity: 0.3,
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 4 },
@@ -487,8 +531,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
   },
   checkboxChecked: {
-    backgroundColor: '#35c6ebff',
-    borderColor: '#35c6ebff',
+    backgroundColor: '#1E4BA3ff',
+    borderColor: '#1E4BA3ff',
   },
   rememberMeText: {
     fontSize: isSmallScreen ? 13 : 14,
@@ -506,7 +550,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   loginButton: {
-    backgroundColor:  '#35c6ebff',
+    backgroundColor:  '#1E4BA3ff',
     borderRadius: 12,
     height: isSmallScreen ? 50 : 54,
     alignItems: 'center',
@@ -514,7 +558,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     ...Platform.select({
       ios: {
-        shadowColor:  '#35c6ebff',
+        shadowColor:  '#1E4BA3ff',
         shadowOpacity: 0.3,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 4 },

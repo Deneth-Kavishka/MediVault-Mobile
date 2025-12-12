@@ -41,7 +41,7 @@ export default function AdminDoctors() {
   const [doctors, setDoctors] = useState<Doctor[]>([
     {
       id: '1',
-      fullName: 'Dr. Sarah Johnson',
+      fullName: 'Dr. Nimal Silvs',
       email: 'sarah.johnson@medivault.com',
       phone: '+1 234-567-8901',
       specialization: 'Cardiologist',
@@ -58,7 +58,7 @@ export default function AdminDoctors() {
     },
     {
       id: '2',
-      fullName: 'Dr. Michael Chen',
+      fullName: 'Dr. Sirisena Abeysekera',
       email: 'michael.chen@medivault.com',
       phone: '+1 234-567-8902',
       specialization: 'Neurologist',
@@ -655,9 +655,9 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   filterChipActive: {
-    backgroundColor: '#35c6eb15',
+    backgroundColor: '#1E4BA315',
     borderWidth: 1,
-    borderColor: '#35c6eb',
+    borderColor: '#1E4BA3',
   },
   filterChipText: {
     fontSize: 12,
@@ -665,7 +665,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   filterChipTextActive: {
-    color: '#35c6eb',
+    color: '#1E4BA3',
     fontWeight: '600',
   },
   doctorsList: {
@@ -931,17 +931,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   dayBadge: {
-    backgroundColor: '#35c6eb15',
+    backgroundColor: '#1E4BA315',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#35c6eb',
+    borderColor: '#1E4BA3',
   },
   dayText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#35c6eb',
+    color: '#1E4BA3',
   },
   modalFooter: {
     paddingHorizontal: 20,
@@ -952,7 +952,7 @@ const styles = StyleSheet.create({
   closeButton: {
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
     alignItems: 'center',
   },
   closeButtonText: {
@@ -961,3 +961,4 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
 });
+

@@ -241,12 +241,12 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor:  '#35c6ebff',
+    backgroundColor:  '#1E4BA3ff',
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({
       ios: {
-        shadowColor:  '#35c6ebff',
+        shadowColor:  '#1E4BA3ff',
         shadowOpacity: 0.3,
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 4 },
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
 
   // Button
   button: {
-    backgroundColor: '#35c6ebff',
+    backgroundColor: '#1E4BA3ff',
     borderRadius: 12,
     height: isSmallScreen ? 50 : 54,
     alignItems: 'center',
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     ...Platform.select({
       ios: {
-        shadowColor: '#35c6ebff',
+        shadowColor: '#1E4BA3ff',
         shadowOpacity: 0.3,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 4 },
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontSize: isSmallScreen ? 13 : 14,
-    color: '#35c6ebff',
+    color: '#1E4BA3ff',
     fontWeight: '700',
   },
 
@@ -384,3 +384,4 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+

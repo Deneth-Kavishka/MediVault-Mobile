@@ -15,7 +15,8 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import Animated from 'react-native-reanimated';
+import AdminAddUser from '../../components/admin/AdminAddUser';
+import AdminAppointments from '../../components/admin/AdminAppointments';
 import AdminDoctors from '../../components/admin/AdminDoctors';
 import AdminMessages from '../../components/admin/AdminMessages';
 import AdminNotifications from '../../components/admin/AdminNotifications';
@@ -23,10 +24,9 @@ import AdminPatients from '../../components/admin/AdminPatients';
 import AdminReports from '../../components/admin/AdminReports';
 import AdminSettings from '../../components/admin/AdminSettings';
 import AdminUserManagement from '../../components/admin/AdminUserManagement';
-import AppointmentsView from '../../components/shared/AppointmentsView';
 import { sessionService } from '../../src/services/sessionService';
 import { storageService } from '../../src/services/storageService';
-import { useFadeIn, useSlideInTop, useStaggerAnimation } from '../../utils/animations';
+// Animation imports removed - dashboard cards don't need animations for better performance
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 360;
@@ -36,7 +36,6 @@ interface DashboardStats {
   totalUsers: number;
   totalDoctors: number;
   totalPatients: number;
-  totalAppointments: number;
   activeSessions: number;
   pendingApprovals: number;
 }
@@ -60,21 +59,12 @@ export default function AdminDashboardScreen() {
     totalUsers: 10547,
     totalDoctors: 523,
     totalPatients: 9824,
-    totalAppointments: 1247,
     activeSessions: 342,
     pendingApprovals: 15
   });
 
   // Slow animations (600-1000ms)
-  const headerAnim = useSlideInTop(0, -30);
-  const stat1Anim = useStaggerAnimation(0, 150);
-  const stat2Anim = useStaggerAnimation(1, 150);
-  const stat3Anim = useStaggerAnimation(2, 150);
-  const stat4Anim = useStaggerAnimation(3, 150);
-  const stat5Anim = useStaggerAnimation(4, 150);
-  const stat6Anim = useStaggerAnimation(5, 150);
-  const quickActionsAnim = useFadeIn(900, 800);
-  const activitiesAnim = useFadeIn(1100, 800);
+  // ANIMATIONS REMOVED FOR BETTER PERFORMANCE
 
   const [recentActivities] = useState<RecentActivity[]>([
     {
@@ -84,14 +74,6 @@ export default function AdminDashboardScreen() {
       time: '5 minutes ago',
       icon: 'account-plus',
       color: '#10B981'
-    },
-    {
-      id: '2',
-      type: 'appointment',
-      description: 'New appointment scheduled',
-      time: '12 minutes ago',
-      icon: 'calendar-check',
-      color: '#3B82F6'
     },
     {
       id: '3',
@@ -149,7 +131,7 @@ export default function AdminDashboardScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#35c6ebff" />
+        <ActivityIndicator size="large" color="#1E4BA3ff" />
       </View>
     );
   }
@@ -164,8 +146,8 @@ export default function AdminDashboardScreen() {
       >
         <View style={styles.gradientOverlay} />
 
-        {/* Header */}
-        <Animated.View style={[styles.header, headerAnim]}>
+        {/* Header - Animation removed for performance */}
+        <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity 
               style={styles.backButton} 
@@ -184,7 +166,7 @@ export default function AdminDashboardScreen() {
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={24} color="#fff" />
           </TouchableOpacity>
-        </Animated.View>
+        </View>
 
         {/* Navigation Bar */}
         <View style={styles.navContainer}>
@@ -200,7 +182,7 @@ export default function AdminDashboardScreen() {
               <MaterialCommunityIcons 
                 name="view-dashboard" 
                 size={20} 
-                color={activeNav === 'dashboard' ? '#35c6eb' : '#6B7280'} 
+                color={activeNav === 'dashboard' ? '#1E4BA3' : '#6B7280'} 
               />
               <RNText style={[styles.navText, activeNav === 'dashboard' && styles.navTextActive]}>Dashboard</RNText>
             </TouchableOpacity>
@@ -212,7 +194,7 @@ export default function AdminDashboardScreen() {
               <Ionicons 
                 name="chatbubbles-outline" 
                 size={20} 
-                color={activeNav === 'messages' ? '#35c6eb' : '#6B7280'} 
+                color={activeNav === 'messages' ? '#1E4BA3' : '#6B7280'} 
               />
               <RNText style={[styles.navText, activeNav === 'messages' && styles.navTextActive]}>Messages</RNText>
             </TouchableOpacity>
@@ -224,7 +206,7 @@ export default function AdminDashboardScreen() {
               <Ionicons 
                 name="notifications-outline" 
                 size={20} 
-                color={activeNav === 'notifications' ? '#35c6eb' : '#6B7280'} 
+                color={activeNav === 'notifications' ? '#1E4BA3' : '#6B7280'} 
               />
               <RNText style={[styles.navText, activeNav === 'notifications' && styles.navTextActive]}>Notifications</RNText>
             </TouchableOpacity>
@@ -236,7 +218,7 @@ export default function AdminDashboardScreen() {
               <MaterialCommunityIcons 
                 name="account-cog" 
                 size={20} 
-                color={activeNav === 'users' ? '#35c6eb' : '#6B7280'} 
+                color={activeNav === 'users' ? '#1E4BA3' : '#6B7280'} 
               />
               <RNText style={[styles.navText, activeNav === 'users' && styles.navTextActive]}>User Management</RNText>
             </TouchableOpacity>
@@ -248,7 +230,7 @@ export default function AdminDashboardScreen() {
               <MaterialCommunityIcons 
                 name="account-heart" 
                 size={20} 
-                color={activeNav === 'patients' ? '#35c6eb' : '#6B7280'} 
+                color={activeNav === 'patients' ? '#1E4BA3' : '#6B7280'} 
               />
               <RNText style={[styles.navText, activeNav === 'patients' && styles.navTextActive]}>Patients</RNText>
             </TouchableOpacity>
@@ -260,7 +242,7 @@ export default function AdminDashboardScreen() {
               <MaterialCommunityIcons 
                 name="doctor" 
                 size={20} 
-                color={activeNav === 'doctors' ? '#35c6eb' : '#6B7280'} 
+                color={activeNav === 'doctors' ? '#1E4BA3' : '#6B7280'} 
               />
               <RNText style={[styles.navText, activeNav === 'doctors' && styles.navTextActive]}>Doctors</RNText>
             </TouchableOpacity>
@@ -272,7 +254,7 @@ export default function AdminDashboardScreen() {
               <MaterialCommunityIcons 
                 name="calendar-clock" 
                 size={20} 
-                color={activeNav === 'appointments' ? '#35c6eb' : '#6B7280'} 
+                color={activeNav === 'appointments' ? '#1E4BA3' : '#6B7280'} 
               />
               <RNText style={[styles.navText, activeNav === 'appointments' && styles.navTextActive]}>Appointments</RNText>
             </TouchableOpacity>
@@ -284,7 +266,7 @@ export default function AdminDashboardScreen() {
               <MaterialCommunityIcons 
                 name="file-chart" 
                 size={20} 
-                color={activeNav === 'reports' ? '#35c6eb' : '#6B7280'} 
+                color={activeNav === 'reports' ? '#1E4BA3' : '#6B7280'} 
               />
               <RNText style={[styles.navText, activeNav === 'reports' && styles.navTextActive]}>Reports</RNText>
             </TouchableOpacity>
@@ -296,25 +278,33 @@ export default function AdminDashboardScreen() {
               <Ionicons 
                 name="settings-outline" 
                 size={20} 
-                color={activeNav === 'settings' ? '#35c6eb' : '#6B7280'} 
+                color={activeNav === 'settings' ? '#1E4BA3' : '#6B7280'} 
               />
               <RNText style={[styles.navText, activeNav === 'settings' && styles.navTextActive]}>System Settings</RNText>
             </TouchableOpacity>
           </ScrollView>
         </View>
 
-        {activeNav === 'appointments' ? (
-          <AppointmentsView userRole="admin" userId={adminUser?.id} />
+        {activeNav === 'add-user' ? (
+          <AdminAddUser 
+            onBack={() => setActiveNav('dashboard')}
+            onUserAdded={(user: any) => {
+              console.log('New user added:', user);
+              setActiveNav('dashboard');
+            }}
+          />
         ) : activeNav === 'messages' ? (
           <AdminMessages />
         ) : activeNav === 'notifications' ? (
           <AdminNotifications />
         ) : activeNav === 'users' ? (
-          <AdminUserManagement />
+          <AdminUserManagement onAddUser={() => setActiveNav('add-user')} />
         ) : activeNav === 'patients' ? (
           <AdminPatients />
         ) : activeNav === 'doctors' ? (
           <AdminDoctors />
+        ) : activeNav === 'appointments' ? (
+          <AdminAppointments />
         ) : activeNav === 'reports' ? (
           <AdminReports />
         ) : activeNav === 'settings' ? (
@@ -326,46 +316,38 @@ export default function AdminDashboardScreen() {
             showsVerticalScrollIndicator={false}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           >
-            {/* Quick Stats Grid */}
+            {/* Quick Stats Grid - Animations removed for performance */}
             <View style={styles.section}>
             <RNText style={styles.sectionTitle}>Dashboard Overview</RNText>
             <View style={styles.statsGrid}>
-              <Animated.View style={[styles.statCard, stat1Anim]}>
+              <View style={styles.statCard}>
                 <View style={[styles.statIconContainer, { backgroundColor: '#3B82F615' }]}>
                   <MaterialCommunityIcons name="account-group" size={28} color="#3B82F6" />
                 </View>
                 <RNText style={styles.statValue}>{stats.totalUsers.toLocaleString()}</RNText>
                 <RNText style={styles.statLabel}>Total Users</RNText>
-              </Animated.View>
+              </View>
 
-              <Animated.View style={[styles.statCard, stat2Anim]}>
+              <View style={styles.statCard}>
                 <View style={[styles.statIconContainer, { backgroundColor: '#10B98115' }]}>
                   <MaterialCommunityIcons name="doctor" size={28} color="#10B981" />
                 </View>
                 <RNText style={styles.statValue}>{stats.totalDoctors}</RNText>
                 <RNText style={styles.statLabel}>Doctors</RNText>
-              </Animated.View>
+              </View>
 
-              <Animated.View style={[styles.statCard, stat3Anim]}>
+              <View style={styles.statCard}>
                 <View style={[styles.statIconContainer, { backgroundColor: '#8B5CF615' }]}>
                   <MaterialCommunityIcons name="account-heart" size={28} color="#8B5CF6" />
                 </View>
                 <RNText style={styles.statValue}>{stats.totalPatients.toLocaleString()}</RNText>
                 <RNText style={styles.statLabel}>Patients</RNText>
-              </Animated.View>
-
-              <Animated.View style={[styles.statCard, stat4Anim]}>
-                <View style={[styles.statIconContainer, { backgroundColor: '#F59E0B15' }]}>
-                  <MaterialCommunityIcons name="calendar-clock" size={28} color="#F59E0B" />
-                </View>
-                <RNText style={styles.statValue}>{stats.totalAppointments.toLocaleString()}</RNText>
-                <RNText style={styles.statLabel}>Appointments</RNText>
-              </Animated.View>
+              </View>
             </View>
           </View>
 
-          {/* System Status */}
-          <Animated.View style={[styles.section, stat5Anim]}>
+          {/* System Status - Animation removed for performance */}
+          <View style={styles.section}>
             <View style={styles.systemStatusCard}>
               <View style={styles.systemStatusHeader}>
                 <MaterialCommunityIcons name="shield-check" size={24} color="#10B981" />
@@ -382,36 +364,48 @@ export default function AdminDashboardScreen() {
                 </View>
               </View>
             </View>
-          </Animated.View>
+          </View>
 
-          {/* Quick Actions */}
-          <Animated.View style={[styles.section, quickActionsAnim]}>
+          {/* Quick Actions - Animation removed for performance */}
+          <View style={styles.section}>
             <RNText style={styles.sectionTitle}>Quick Actions</RNText>
             <View style={styles.actionsGrid}>
-              <TouchableOpacity style={styles.actionCard}>
+              <TouchableOpacity 
+                style={styles.actionCard}
+                onPress={() => setActiveNav('add-user')}
+              >
                 <MaterialCommunityIcons name="account-plus" size={32} color="#3B82F6" />
                 <RNText style={styles.actionText}>Add User</RNText>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.actionCard}>
+              <TouchableOpacity 
+                style={styles.actionCard}
+                onPress={() => setActiveNav('doctors')}
+              >
                 <MaterialCommunityIcons name="doctor" size={32} color="#10B981" />
                 <RNText style={styles.actionText}>Manage Doctors</RNText>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.actionCard}>
+              <TouchableOpacity 
+                style={styles.actionCard}
+                onPress={() => setActiveNav('reports')}
+              >
                 <MaterialCommunityIcons name="file-document" size={32} color="#8B5CF6" />
                 <RNText style={styles.actionText}>Reports</RNText>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.actionCard}>
+              <TouchableOpacity 
+                style={styles.actionCard}
+                onPress={() => setActiveNav('settings')}
+              >
                 <MaterialCommunityIcons name="cog" size={32} color="#F59E0B" />
                 <RNText style={styles.actionText}>Settings</RNText>
               </TouchableOpacity>
             </View>
-          </Animated.View>
+          </View>
 
-          {/* Recent Activity */}
-          <Animated.View style={[styles.section, activitiesAnim]}>
+          {/* Recent Activity  */}
+          <View style={styles.section}>
             <RNText style={styles.sectionTitle}>Recent Activity</RNText>
             {recentActivities.map((activity) => (
               <View key={activity.id} style={styles.activityCard}>
@@ -424,7 +418,7 @@ export default function AdminDashboardScreen() {
                 </View>
               </View>
             ))}
-          </Animated.View>
+          </View>
         </ScrollView>
         )}
       </ImageBackground>
@@ -459,7 +453,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'android' ? 40 : 60,
     paddingBottom: 20,
-    backgroundColor: 'rgba(53, 198, 235, 0.95)',
+    backgroundColor: '#1E4BA3',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -524,9 +518,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   navItemActive: {
-    backgroundColor: '#35c6eb15',
+    backgroundColor: '#1E4BA315',
     borderWidth: 1,
-    borderColor: '#35c6eb',
+    borderColor: '#1E4BA3',
   },
   navText: {
     fontSize: 14,
@@ -534,7 +528,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   navTextActive: {
-    color: '#35c6eb',
+    color: '#1E4BA3',
     fontWeight: '600',
   },
   scrollView: {
@@ -716,3 +710,4 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
 });
+

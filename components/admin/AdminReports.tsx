@@ -427,7 +427,7 @@ export default function AdminReports() {
                   <RNText style={styles.doctorRankText}>#{index + 1}</RNText>
                 </View>
                 <View style={styles.doctorAvatar}>
-                  <MaterialCommunityIcons name="doctor" size={24} color="#35c6eb" />
+                  <MaterialCommunityIcons name="doctor" size={24} color="#1E4BA3" />
                 </View>
                 <View style={styles.doctorInfo}>
                   <RNText style={styles.doctorName}>{doctor.name}</RNText>
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
   exportButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -555,9 +555,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   periodButtonActive: {
-    backgroundColor: '#35c6eb15',
+    backgroundColor: '#1E4BA315',
     borderWidth: 1,
-    borderColor: '#35c6eb',
+    borderColor: '#1E4BA3',
   },
   periodText: {
     fontSize: 13,
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   periodTextActive: {
-    color: '#35c6eb',
+    color: '#1E4BA3',
     fontWeight: '600',
   },
   scrollView: {
@@ -739,7 +739,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#35c6eb15',
+    backgroundColor: '#1E4BA315',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -747,13 +747,13 @@ const styles = StyleSheet.create({
   doctorRankText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#35c6eb',
+    color: '#1E4BA3',
   },
   doctorAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#35c6eb15',
+    backgroundColor: '#1E4BA315',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -864,3 +864,4 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
 });
+

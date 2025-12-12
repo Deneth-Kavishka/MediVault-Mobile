@@ -1,15 +1,15 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import {
-    Alert,
-    ImageBackground,
-    Platform,
-    Text as RNText,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  ImageBackground,
+  Platform,
+  Text as RNText,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
@@ -147,10 +147,21 @@ export default function CreatePrescription() {
       resizeMode="cover"
     >
       {/* Header */}
-      <View style={styles.header}>
-        <RNText style={styles.headerTitle}>Create Prescription</RNText>
-        <RNText style={styles.headerSubtitle}>Fill in patient details and medications</RNText>
-      </View>
+      <ImageBackground 
+        source={require('../../assets/images/Background-image.jpg')} 
+        style={styles.headerBackground} 
+        resizeMode="cover"
+      >
+        <View style={styles.header}>
+          <View style={styles.headerCard}>
+            <View style={styles.headerIconContainer}>
+              <MaterialCommunityIcons name="file-document-edit" size={28} color="#1E4BA3" />
+            </View>
+            <RNText style={styles.headerTitle}>Create Prescription</RNText>
+            <RNText style={styles.headerSubtitle}>Complete patient medical information</RNText>
+          </View>
+        </View>
+      </ImageBackground>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         {/* Patient Information Section */}
@@ -218,7 +229,7 @@ export default function CreatePrescription() {
           <View style={styles.sectionHeader}>
             <RNText style={styles.sectionTitle}>Medications</RNText>
             <TouchableOpacity style={styles.addButton} onPress={addMedication}>
-              <Ionicons name="add-circle" size={24} color="#35c6eb" />
+              <Ionicons name="add-circle" size={24} color="#1E4BA3" />
               <RNText style={styles.addButtonText}>Add Medication</RNText>
             </TouchableOpacity>
           </View>
@@ -311,7 +322,7 @@ export default function CreatePrescription() {
         {showQRPreview && generatedQRCode && (
           <View style={styles.qrPreviewSection}>
             <View style={styles.qrPreviewHeader}>
-              <MaterialCommunityIcons name="qrcode" size={28} color="#35c6eb" />
+              <MaterialCommunityIcons name="qrcode" size={28} color="#1E4BA3" />
               <RNText style={styles.qrPreviewTitle}>Generated QR Code</RNText>
             </View>
             <View style={styles.qrCodeContainer}>
@@ -335,7 +346,7 @@ export default function CreatePrescription() {
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.previewButton} onPress={generatePrescriptionQRCode}>
-            <MaterialCommunityIcons name="qrcode-scan" size={20} color="#35c6eb" />
+            <MaterialCommunityIcons name="qrcode-scan" size={20} color="#1E4BA3" />
             <RNText style={styles.previewButtonText}>Generate QR Code</RNText>
           </TouchableOpacity>
 
@@ -351,20 +362,45 @@ export default function CreatePrescription() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'transparent' },
+  headerBackground: {
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+  },
   header: { 
-    backgroundColor: '#fff', 
-    paddingHorizontal: 20, 
-    paddingTop: 20, 
-    paddingBottom: 16, 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#E5E7EB',
+    alignItems: 'center',
+  },
+  headerCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    width: '100%',
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
-      android: { elevation: 2 }
+      ios: { shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } },
+      android: { elevation: 5 }
     })
   },
-  headerTitle: { fontSize: 24, fontWeight: '800', color: '#1F2937', marginBottom: 4 },
-  headerSubtitle: { fontSize: 14, color: '#6B7280' },
+  headerIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#F0F9FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  headerTitle: { 
+    fontSize: 20, 
+    fontWeight: '800', 
+    color: '#1F2937', 
+    marginBottom: 6,
+    textAlign: 'center'
+  },
+  headerSubtitle: { 
+    fontSize: 13, 
+    color: '#6B7280',
+    textAlign: 'center'
+  },
   content: { flex: 1 },
   contentContainer: { padding: 16, paddingBottom: 40 },
   section: { 
@@ -394,7 +430,7 @@ const styles = StyleSheet.create({
   rowInputs: { flexDirection: 'row', gap: 12 },
   halfInput: { flex: 1 },
   addButton: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  addButtonText: { fontSize: 14, fontWeight: '600', color: '#35c6eb' },
+  addButtonText: { fontSize: 14, fontWeight: '600', color: '#1E4BA3' },
   medicationCard: { 
     backgroundColor: '#F9FAFB', 
     borderRadius: 12, 
@@ -408,7 +444,7 @@ const styles = StyleSheet.create({
     width: 32, 
     height: 32, 
     borderRadius: 16, 
-    backgroundColor: '#35c6eb', 
+    backgroundColor: '#1E4BA3', 
     alignItems: 'center', 
     justifyContent: 'center',
     marginRight: 12
@@ -422,9 +458,9 @@ const styles = StyleSheet.create({
     padding: 20, 
     marginBottom: 16,
     borderWidth: 2,
-    borderColor: '#35c6eb',
+    borderColor: '#1E4BA3',
     ...Platform.select({
-      ios: { shadowColor: '#35c6eb', shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } },
+      ios: { shadowColor: '#1E4BA3', shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 4 } },
       android: { elevation: 4 }
     })
   },
@@ -434,7 +470,7 @@ const styles = StyleSheet.create({
   prescriptionCode: { 
     fontSize: 16, 
     fontWeight: '700', 
-    color: '#35c6eb', 
+    color: '#1E4BA3', 
     marginTop: 16,
     backgroundColor: '#F0F9FF',
     paddingHorizontal: 16,
@@ -462,22 +498,23 @@ const styles = StyleSheet.create({
     paddingVertical: 16, 
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#35c6eb'
+    borderColor: '#1E4BA3'
   },
-  previewButtonText: { fontSize: 15, fontWeight: '700', color: '#35c6eb' },
+  previewButtonText: { fontSize: 15, fontWeight: '700', color: '#1E4BA3' },
   saveButton: { 
     flex: 1, 
     flexDirection: 'row', 
     alignItems: 'center', 
     justifyContent: 'center', 
     gap: 8, 
-    backgroundColor: '#35c6eb', 
+    backgroundColor: '#1E4BA3', 
     paddingVertical: 16, 
     borderRadius: 12,
     ...Platform.select({
-      ios: { shadowColor: '#35c6eb', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } },
+      ios: { shadowColor: '#1E4BA3', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } },
       android: { elevation: 4 }
     })
   },
   saveButtonText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 });
+

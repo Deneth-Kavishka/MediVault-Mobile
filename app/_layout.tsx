@@ -10,7 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useColorScheme } from '../hooks/use-color-scheme';
-import { ThemeProvider } from '../hooks/use-theme'; // ✅ your custom theme provider
+import { ThemeProvider } from '../hooks/use-theme';
 import { sessionService } from '../src/services/sessionService';
 import { storageService } from '../src/services/storageService';
 import { queryClient } from '../src/store/queryClient';
@@ -22,10 +22,10 @@ export const unstable_settings = {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const navigationTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
-  const router = useRouter();
   const segments = useSegments();
-  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check session on app launch and whenever user storage changes
   useEffect(() => {
@@ -49,72 +49,71 @@ function RootLayoutNav() {
 
     checkSession();
 
-    // Set up an interval to check authentication status periodically
-    const interval = setInterval(async () => {
-      const token = await storageService.getToken();
-      const user = await storageService.getUser();
-      const newAuthState = !!(token && user);
-      
-      if (newAuthState !== isAuthenticated) {
-        setIsAuthenticated(newAuthState);
-      }
-    }, 500); // Check every 500ms
-
     return () => {
       sessionService.stopAutoRefresh();
-      clearInterval(interval);
     };
-  }, [isAuthenticated]);
+  }, []);
 
   // Handle navigation based on authentication state
   useEffect(() => {
     if (isLoading) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
-    const inTabsGroup = segments[0] === '(tabs)';
-    const currentAuthPage = segments[1]; // landing-page, login, register, etc.
+    const checkAuthAndNavigate = async () => {
+      const inAuthGroup = segments[0] === '(auth)';
+      const inTabsGroup = segments[0] === '(tabs)';
+      const currentAuthPage = segments[1];
 
-    // If not authenticated, allow navigation within auth group
-    if (!isAuthenticated) {
-      // Only redirect to landing page if they're trying to access tabs
-      if (inTabsGroup) {
-        router.replace('/(auth)/landing-page' as any);
+      // Check current authentication status from storage
+      const token = await storageService.getToken();
+      const user = await storageService.getUser();
+      const currentlyAuthenticated = !!(token && user);
+
+      console.log('Navigation guard:', { 
+        inAuthGroup, 
+        inTabsGroup, 
+        currentAuthPage,
+        currentlyAuthenticated,
+        userRole: user?.role 
+      });
+
+      // Update auth state if it changed
+      if (currentlyAuthenticated !== isAuthenticated) {
+        setIsAuthenticated(currentlyAuthenticated);
       }
-      // Otherwise let them navigate freely in auth group
-      return;
-    }
 
-    // If authenticated, check if they're in auth group (except landing page which is public)
-    if (isAuthenticated) {
-      // Allow landing page to be viewed even when authenticated
-      if (currentAuthPage === 'landing-page') return;
+      // Only redirect if trying to access protected routes without authentication
+      if (!currentlyAuthenticated && inTabsGroup) {
+        console.log('Not authenticated, redirecting to landing page');
+        router.replace('/(auth)/landing-page' as any);
+        return;
+      }
 
       // If authenticated and on login/register page, redirect to dashboard
-      if (inAuthGroup && (currentAuthPage === 'login' || currentAuthPage === 'register')) {
-        const checkAndRedirect = async () => {
-          const user = await storageService.getUser();
-          if (user?.role === 'doctor') {
-            router.replace('/(tabs)/doctor-dashboard' as any);
-          } else if (user?.role === 'admin') {
-            router.replace('/(tabs)/admin-dashboard' as any);
-          } else if (user?.role === 'pharmacist') {
-            router.replace('/(tabs)/pharmacist-dashboard' as any);
-          } else if (user?.role === 'lab_technician') {
-            router.replace('/(tabs)/lab-technician-dashboard' as any);
-          } else {
-            router.replace('/(tabs)' as any);
-          }
-        };
-        checkAndRedirect();
+      if (currentlyAuthenticated && inAuthGroup && (currentAuthPage === 'login' || currentAuthPage === 'register' || currentAuthPage === 'forgot-password')) {
+        console.log('Authenticated on auth page, redirecting to dashboard');
+        
+        if (user?.role === 'doctor') {
+          router.replace('/(tabs)/doctor-dashboard' as any);
+        } else if (user?.role === 'admin') {
+          router.replace('/(tabs)/admin-dashboard' as any);
+        } else if (user?.role === 'pharmacist') {
+          router.replace('/(tabs)/pharmacist-dashboard' as any);
+        } else if (user?.role === 'lab_technician') {
+          router.replace('/(tabs)/lab-technician-dashboard' as any);
+        } else {
+          router.replace('/(tabs)' as any);
+        }
       }
-    }
-  }, [isAuthenticated, segments, isLoading]);
+    };
+
+    checkAuthAndNavigate();
+  }, [segments, isLoading]);
 
   // Show loading screen while checking session
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F3F4F6' }}>
-        <ActivityIndicator size="large" color="#35c6ebff" />
+        <ActivityIndicator size="large" color="#1E4BA3ff" />
       </View>
     );
   }
@@ -150,3 +149,4 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+

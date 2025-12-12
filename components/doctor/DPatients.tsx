@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   searchTypeButtonActive: {
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
   },
   searchTypeText: {
     fontSize: 13,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -212,3 +212,4 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
 });
+

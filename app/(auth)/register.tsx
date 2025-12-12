@@ -2,7 +2,7 @@ import { authApi } from '@/api/auth';
 import { storageService } from '@/services/storageService';
 import { RegisterData } from '@/types/auth';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
@@ -82,7 +82,7 @@ export default function RegisterScreen() {
       await storageService.setToken(token);
       await storageService.setUser(user);
 
-      router.replace('/(tabs)');
+      router.replace('/(tabs)' as any);
     } catch (error: any) {
       Alert.alert('Registration Failed', error.response?.data?.message || 'An error occurred');
     } finally {
@@ -281,11 +281,9 @@ export default function RegisterScreen() {
                   {/* Login Link */}
                   <View style={styles.loginSection}>
                     <RNText style={styles.loginText}>Already have an account? </RNText>
-                    <Link href="/(auth)/login" asChild>
-                      <TouchableOpacity>
-                        <RNText style={styles.loginLink}>Sign In</RNText>
-                      </TouchableOpacity>
-                    </Link>
+                    <TouchableOpacity onPress={() => router.push('/(auth)/login' as any)}>
+                      <RNText style={styles.loginLink}>Sign In</RNText>
+                    </TouchableOpacity>
                   </View>
                 </View>
               </Animated.View>
@@ -340,7 +338,7 @@ const styles = StyleSheet.create({
     width: isSmallScreen ? 70 : 80,
     height: isSmallScreen ? 70 : 80,
     borderRadius: isSmallScreen ? 35 : 40,
-    backgroundColor: '#35c6ebff',
+    backgroundColor: '#1E4BA3ff',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: isSmallScreen ? 16 : 20,
@@ -438,7 +436,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   registerButton: {
-    backgroundColor: '#35c6ebff',
+    backgroundColor: '#1E4BA3ff',
     borderRadius: 12,
     height: isSmallScreen ? 50 : 54,
     alignItems: 'center',
@@ -471,7 +469,8 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontSize: isSmallScreen ? 13 : 14,
-    color:  '#35c6ebff',
+    color:  '#1E4BA3ff',
     fontWeight: '600',
   },
 });
+

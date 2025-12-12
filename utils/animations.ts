@@ -12,20 +12,21 @@ import {
 
 /**
  * Animation configurations for consistent behavior across the app
+ * Optimized for performance with reduced durations
  */
 export const AnimationConfig = {
-  fast: { duration: 200 },
-  normal: { duration: 300 },
-  slow: { duration: 500 },
+  fast: { duration: 150 },
+  normal: { duration: 250 },
+  slow: { duration: 400 },
   spring: {
-    damping: 15,
-    stiffness: 150,
-    mass: 0.5,
+    damping: 20,
+    stiffness: 180,
+    mass: 0.3,
   },
   springBouncy: {
-    damping: 10,
-    stiffness: 100,
-    mass: 1,
+    damping: 12,
+    stiffness: 120,
+    mass: 0.8,
   },
 };
 
@@ -179,13 +180,27 @@ export const useBounceIn = (delay = 0) => {
 };
 
 /**
- * Stagger Children Animation Hook
+ * Stagger Children Animation Hook - OPTIMIZED
+ * Reduced complexity for better performance
  * @param index - Index of the child element
- * @param staggerDelay - Delay between each child (ms)
+ * @param staggerDelay - Delay between each child (ms) - default reduced to 50ms
  */
-export const useStaggerAnimation = (index: number, staggerDelay = 100) => {
-  const delay = index * staggerDelay;
-  return useSlideInBottom(delay);
+export const useStaggerAnimation = (index: number, staggerDelay = 50) => {
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(20); // Reduced distance
+
+  useEffect(() => {
+    const delay = index * staggerDelay;
+    opacity.value = withDelay(delay, withTiming(1, { duration: 200 }));
+    translateY.value = withDelay(delay, withTiming(0, { duration: 200 }));
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  return animatedStyle;
 };
 
 /**
@@ -333,15 +348,16 @@ export const useProgressBar = (progress: number) => {
 };
 
 /**
- * Pulse Animation Hook (for notifications)
+ * Pulse Animation Hook (for notifications) - OPTIMIZED
+ * Faster and more subtle for better performance
  */
 export const usePulse = () => {
   const scale = useSharedValue(1);
 
   useEffect(() => {
     scale.value = withSequence(
-      withTiming(1.1, { duration: 500 }),
-      withTiming(1, { duration: 500 })
+      withTiming(1.05, { duration: 300 }), // Reduced scale and duration
+      withTiming(1, { duration: 300 })
     );
   }, []);
 
@@ -358,23 +374,24 @@ export const usePulse = () => {
  * @param delay - Delay before animation starts (ms)
  * @param duration - Animation duration (ms)
  */
-export const useScrollTrigger = (delay = 0, duration = 800) => {
+/**
+ * Scroll Triggered Animation Hook - OPTIMIZED
+ * Removed scale transform for better performance
+ * @param delay - Delay before animation starts (ms)
+ * @param duration - Animation duration (ms) - default reduced to 400ms
+ */
+export const useScrollTrigger = (delay = 0, duration = 400) => {
   const opacity = useSharedValue(0);
-  const translateY = useSharedValue(50);
-  const scale = useSharedValue(0.9);
+  const translateY = useSharedValue(30); // Reduced distance
 
   const trigger = () => {
     opacity.value = withDelay(delay, withTiming(1, { duration }));
-    translateY.value = withDelay(delay, withSpring(0, { damping: 20, stiffness: 90 }));
-    scale.value = withDelay(delay, withSpring(1, { damping: 20, stiffness: 90 }));
+    translateY.value = withDelay(delay, withSpring(0, AnimationConfig.spring));
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
+    transform: [{ translateY: translateY.value }],
   }));
 
   return { animatedStyle, trigger };

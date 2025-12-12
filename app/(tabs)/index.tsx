@@ -20,7 +20,7 @@ export default function DashboardScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#35c6ebff" />
+        <ActivityIndicator size="large" color="#1E4BA3ff" />
       </View>
     );
   }
@@ -51,3 +51,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
+

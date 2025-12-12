@@ -122,3 +122,4 @@ const styles = StyleSheet.create({
   priorityText: { fontSize: 10, fontWeight: '700', color: '#fff' },
   dateText: { fontSize: 12, color: '#9CA3AF' },
 });
+

@@ -24,7 +24,11 @@ interface User {
   specialization?: string;
 }
 
-export default function AdminUserManagement() {
+interface AdminUserManagementProps {
+  onAddUser?: () => void;
+}
+
+export default function AdminUserManagement({ onAddUser }: AdminUserManagementProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -427,7 +431,7 @@ export default function AdminUserManagement() {
           <RNText style={styles.headerTitle}>User Management</RNText>
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => setShowAddModal(true)}
+            onPress={() => onAddUser ? onAddUser() : setShowAddModal(true)}
           >
             <Ionicons name="add" size={20} color="#fff" />
             <RNText style={styles.addButtonText}>Add User</RNText>
@@ -656,7 +660,7 @@ export default function AdminUserManagement() {
             >
               <MaterialCommunityIcons name="account" size={24} color="#3B82F6" />
               <RNText style={styles.roleOptionText}>Patient</RNText>
-              {formData.role === 'patient' && <Ionicons name="checkmark" size={24} color="#35c6eb" />}
+              {formData.role === 'patient' && <Ionicons name="checkmark" size={24} color="#1E4BA3" />}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -668,7 +672,7 @@ export default function AdminUserManagement() {
             >
               <MaterialCommunityIcons name="doctor" size={24} color="#10B981" />
               <RNText style={styles.roleOptionText}>Doctor</RNText>
-              {formData.role === 'doctor' && <Ionicons name="checkmark" size={24} color="#35c6eb" />}
+              {formData.role === 'doctor' && <Ionicons name="checkmark" size={24} color="#1E4BA3" />}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -680,7 +684,7 @@ export default function AdminUserManagement() {
             >
               <MaterialCommunityIcons name="pill" size={24} color="#8B5CF6" />
               <RNText style={styles.roleOptionText}>Pharmacist</RNText>
-              {formData.role === 'pharmacist' && <Ionicons name="checkmark" size={24} color="#35c6eb" />}
+              {formData.role === 'pharmacist' && <Ionicons name="checkmark" size={24} color="#1E4BA3" />}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -692,7 +696,7 @@ export default function AdminUserManagement() {
             >
               <MaterialCommunityIcons name="flask" size={24} color="#F59E0B" />
               <RNText style={styles.roleOptionText}>Lab Technician</RNText>
-              {formData.role === 'lab_technician' && <Ionicons name="checkmark" size={24} color="#35c6eb" />}
+              {formData.role === 'lab_technician' && <Ionicons name="checkmark" size={24} color="#1E4BA3" />}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -704,7 +708,7 @@ export default function AdminUserManagement() {
             >
               <MaterialCommunityIcons name="shield-account" size={24} color="#EF4444" />
               <RNText style={styles.roleOptionText}>Admin</RNText>
-              {formData.role === 'admin' && <Ionicons name="checkmark" size={24} color="#35c6eb" />}
+              {formData.role === 'admin' && <Ionicons name="checkmark" size={24} color="#1E4BA3" />}
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -747,7 +751,7 @@ const styles = StyleSheet.create({
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -786,9 +790,9 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   filterChipActive: {
-    backgroundColor: '#35c6eb15',
+    backgroundColor: '#1E4BA315',
     borderWidth: 1,
-    borderColor: '#35c6eb',
+    borderColor: '#1E4BA3',
   },
   filterChipText: {
     fontSize: 13,
@@ -796,7 +800,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   filterChipTextActive: {
-    color: '#35c6eb',
+    color: '#1E4BA3',
     fontWeight: '600',
   },
   filterDivider: {
@@ -1046,7 +1050,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
     alignItems: 'center',
   },
   saveButtonText: {
@@ -1094,3 +1098,4 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
 });
+

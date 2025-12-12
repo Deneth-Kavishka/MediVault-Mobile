@@ -3,19 +3,18 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  ImageBackground,
-  Platform,
-  RefreshControl,
-  Text as RNText,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    ImageBackground,
+    Platform,
+    RefreshControl,
+    Text as RNText,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import Animated from 'react-native-reanimated';
 import CreateMedicalRecord from '../../components/doctor/CreateMedicalRecord';
 import CreatePrescription from '../../components/doctor/CreatePrescription';
 import DAppointments from '../../components/doctor/DAppointments';
@@ -25,7 +24,7 @@ import DPatients from '../../components/doctor/DPatients';
 import OrderLabTest from '../../components/doctor/OrderLabTest';
 import { sessionService } from '../../src/services/sessionService';
 import { storageService } from '../../src/services/storageService';
-import { useFadeIn, useScrollTrigger, useSlideInTop, useStaggerAnimation } from '../../utils/animations';
+// Animation imports removed - dashboard cards don't need animations for better performance
 
 const { width } = Dimensions.get('window');
 const isSmallScreen = width < 360;
@@ -37,7 +36,8 @@ interface Appointment {
   patientNIC: string;
   time: string;
   type: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'cancel_requested';
+  cancellationReason?: string;
 }
 
 interface Patient {
@@ -114,36 +114,8 @@ export default function DoctorDashboard() {
     prescriptionsIssued: 45,
   });
 
-  // Slow animations (600-1000ms)
-  const headerAnim = useSlideInTop(0, -30);
-  const stat1Anim = useStaggerAnimation(0, 150);
-  const stat2Anim = useStaggerAnimation(1, 150);
-  const stat3Anim = useStaggerAnimation(2, 150);
-  const stat4Anim = useStaggerAnimation(3, 150);
-  const quickActionsAnim = useFadeIn(600, 800);
-  const appointmentsAnim = useFadeIn(800, 800);
-  
-  // Scroll triggered animations for feature cards
-  const [triggeredCards, setTriggeredCards] = useState<{[key: number]: boolean}>({});
-  const quickAction1 = useScrollTrigger(0, 800);
-  const quickAction2 = useScrollTrigger(100, 800);
-  const quickAction3 = useScrollTrigger(200, 800);
-  const quickAction4 = useScrollTrigger(300, 800);
-  const quickAction5 = useScrollTrigger(400, 800);
-  const quickAction6 = useScrollTrigger(500, 800);
-
-  useEffect(() => {
-    // Trigger scroll animations on mount with delay
-    const timer = setTimeout(() => {
-      quickAction1.trigger();
-      quickAction2.trigger();
-      quickAction3.trigger();
-      quickAction4.trigger();
-      quickAction5.trigger();
-      quickAction6.trigger();
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+  // ANIMATIONS REMOVED FOR BETTER PERFORMANCE
+  // Dashboard elements should not animate on every render
 
   // Sample Data
   const [appointments, setAppointments] = useState<Appointment[]>([
@@ -181,7 +153,7 @@ export default function DoctorDashboard() {
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, []); // Removed animation triggers for better performance
 
   const loadDashboardData = async () => {
     try {
@@ -212,7 +184,7 @@ export default function DoctorDashboard() {
           onPress: async () => {
             try {
               await sessionService.clearSession();
-              router.replace('/(auth)/login');
+              router.replace('/(auth)/login' as any);
             } catch (error) {
               console.error('Error logging out:', error);
               Alert.alert('Error', 'Failed to logout. Please try again.');
@@ -332,90 +304,91 @@ export default function DoctorDashboard() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#35c6eb" />
+        <ActivityIndicator size="large" color="#1E4BA3" />
       </View>
     );
   }
 
   const renderOverview = () => (
     <>
-      {/* Stats Grid */}
+      {/* Stats Grid - Animations removed for performance */}
       <View style={styles.statsGrid}>
-        <Animated.View style={[styles.statCard, styles.transparentCard, stat1Anim]}>
-          <MaterialCommunityIcons name="calendar-today" size={28} color="#35c6eb" />
+        <View style={[styles.statCard, styles.whiteCard]}>
+          <MaterialCommunityIcons name="calendar-today" size={28} color="#1E4BA3" />
           <RNText style={styles.statNumberTransparent}>{stats.todayAppointments}</RNText>
           <RNText style={styles.statLabelTransparent}>Today's Appointments</RNText>
-        </Animated.View>
+        </View>
 
-        <Animated.View style={[styles.statCard, styles.transparentCard, stat2Anim]}>
-          <Ionicons name="time-outline" size={28} color="#35c6eb" />
+        <View style={[styles.statCard, styles.whiteCard]}>
+          <Ionicons name="time-outline" size={28} color="#1E4BA3" />
           <RNText style={styles.statNumberTransparent}>{stats.pendingAppointments}</RNText>
           <RNText style={styles.statLabelTransparent}>Pending</RNText>
-        </Animated.View>
+        </View>
 
-        <Animated.View style={[styles.statCard, styles.transparentCard, stat3Anim]}>
-          <MaterialCommunityIcons name="account-group" size={28} color="#35c6eb" />
+        <View style={[styles.statCard, styles.whiteCard]}>
+          <MaterialCommunityIcons name="account-group" size={28} color="#1E4BA3" />
           <RNText style={styles.statNumberTransparent}>{stats.totalPatients}</RNText>
           <RNText style={styles.statLabelTransparent}>Total Patients</RNText>
-        </Animated.View>
+        </View>
 
-        <Animated.View style={[styles.statCard, styles.transparentCard, stat4Anim]}>
-          <MaterialCommunityIcons name="pill" size={28} color="#35c6eb" />
+        <View style={[styles.statCard, styles.whiteCard]}>
+          <MaterialCommunityIcons name="pill" size={28} color="#1E4BA3" />
           <RNText style={styles.statNumberTransparent}>{stats.prescriptionsIssued}</RNText>
           <RNText style={styles.statLabelTransparent}>Prescriptions</RNText>
-        </Animated.View>
+        </View>
       </View>
 
-      {/* Quick Actions */}
-      <Animated.View style={[styles.section, quickActionsAnim]}>
+      {/* Quick Actions - Animations removed for performance */}
+      <View style={styles.section}>
         <RNText style={styles.sectionTitle}>Quick Actions</RNText>
         <View style={styles.quickActionsGrid}>
-          <Animated.View style={quickAction1.animatedStyle}>
+          <View>
             <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('appointments')}>
-              <MaterialCommunityIcons name="calendar-check" size={32} color="#35c6eb" />
+              <MaterialCommunityIcons name="calendar-check" size={32} color="#1E4BA3" />
               <RNText style={styles.quickActionText}>Appointments</RNText>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
 
-          <Animated.View style={quickAction2.animatedStyle}>
+          <View>
             <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('patients')}>
-              <MaterialCommunityIcons name="account-search" size={32} color="#35c6eb" />
+              <MaterialCommunityIcons name="account-search" size={32} color="#1E4BA3" />
               <RNText style={styles.quickActionText}>Search Patients</RNText>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
 
-          <Animated.View style={quickAction3.animatedStyle}>
+          <View>
             <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('create-medical-record')}>
-              <MaterialCommunityIcons name="clipboard-text" size={32} color="#35c6eb" />
+              <MaterialCommunityIcons name="clipboard-text" size={32} color="#1E4BA3" />
               <RNText style={styles.quickActionText}>Create Medical Record</RNText>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
 
-          <Animated.View style={quickAction4.animatedStyle}>
+          <View>
             <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('create-prescription')}>
-              <MaterialCommunityIcons name="prescription" size={32} color="#35c6eb" />
+              <MaterialCommunityIcons name="prescription" size={32} color="#1E4BA3" />
               <RNText style={styles.quickActionText}>Create Prescription</RNText>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
 
-          <Animated.View style={quickAction5.animatedStyle}>
+          <View>
             <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('order-lab-tests')}>
-              <MaterialCommunityIcons name="test-tube" size={32} color="#35c6eb" />
+              <MaterialCommunityIcons name="test-tube" size={32} color="#1E4BA3" />
               <RNText style={styles.quickActionText}>Order Lab Tests</RNText>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
 
-          <Animated.View style={quickAction6.animatedStyle}>
+          <View>
             <TouchableOpacity style={styles.quickActionCard} onPress={() => setActiveTab('messages')}>
-              <MaterialCommunityIcons name="message-text" size={32} color="#35c6eb" />
+              <MaterialCommunityIcons name="message-text" size={32} color="#1E4BA3" />
               <RNText style={styles.quickActionText}>Messages</RNText>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
         </View>
-      </Animated.View>
+      </View>
 
       {/* Today's Appointments */}
-      <Animated.View style={[styles.section, appointmentsAnim]}>
+      {/* Today's Appointments - Animation removed for performance */}
+      <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <RNText style={styles.sectionTitle}>Today's Appointments</RNText>
           <TouchableOpacity onPress={() => setActiveTab('appointments')}>
@@ -430,7 +403,7 @@ export default function DoctorDashboard() {
           >
             <View style={styles.appointmentLeft}>
               <View style={[styles.appointmentStatus, { 
-                backgroundColor: appointment.status === 'confirmed' ? '#35c6eb' : '#F59E0B' 
+                backgroundColor: appointment.status === 'confirmed' ? '#1E4BA3' : '#F59E0B' 
               }]} />
               <View>
                 <RNText style={styles.appointmentPatient}>{appointment.patientName}</RNText>
@@ -440,7 +413,7 @@ export default function DoctorDashboard() {
             <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
           </TouchableOpacity>
         ))}
-      </Animated.View>
+      </View>
     </>
   );
 
@@ -460,8 +433,8 @@ export default function DoctorDashboard() {
       >
         <View style={styles.overlay} />
         
-        {/* Header */}
-        <Animated.View style={[styles.header, headerAnim]}>
+        {/* Header - Animation removed for performance */}
+        <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity 
               style={styles.backButton} 
@@ -470,56 +443,108 @@ export default function DoctorDashboard() {
                 router.replace('/(auth)/login' as any);
               }}
             >
-              <Ionicons name="arrow-back" size={24} color="#1F2937" />
+              <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
             <View>
-              <RNText style={styles.greeting}>Welcome back,</RNText>
-              <RNText style={styles.doctorName}>Dr. {userInfo?.fullName || 'Doctor'}</RNText>
+              <RNText style={styles.greeting}>Welcome Back, Doctor</RNText>
+              <RNText style={styles.userName}>Dr. {userInfo?.fullName || 'Doctor'}</RNText>
             </View>
           </View>
-          <View style={styles.headerButtons}>
-            <TouchableOpacity style={styles.notificationButton}>
-              <Ionicons name="notifications-outline" size={24} color="#1F2937" />
-              <View style={styles.notificationBadge}>
-                <RNText style={styles.notificationBadgeText}>3</RNText>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <Ionicons name="log-out-outline" size={22} color="#EF4444" />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
 
-        {/* Tab Navigation */}
-        <View style={styles.tabContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {[
-              { key: 'overview', label: 'Overview', icon: 'grid-outline' },
-              { key: 'appointments', label: 'Appointments', icon: 'calendar-outline' },
-              { key: 'patients', label: 'Patients', icon: 'people-outline' },
-              { key: 'create-medical-record', label: 'Medical Records', icon: 'document-text-outline' },
-              { key: 'create-prescription', label: 'Prescriptions', icon: 'medical-outline' },
-              { key: 'order-lab-tests', label: 'Lab Tests', icon: 'flask-outline' },
-              { key: 'messages', label: 'Messages', icon: 'chatbubbles-outline' },
-            ].map(tab => (
-              <TouchableOpacity
-                key={tab.key}
-                style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-                onPress={() => setActiveTab(tab.key as any)}
-              >
-                <Ionicons 
-                  name={tab.icon as any} 
-                  size={20} 
-                  color={activeTab === tab.key ? '#35c6eb' : '#6B7280'} 
-                />
-                <RNText style={[
-                  styles.tabText,
-                  activeTab === tab.key && styles.tabTextActive
-                ]}>
-                  {tab.label}
-                </RNText>
-              </TouchableOpacity>
-            ))}
+        {/* Navigation Bar */}
+        <View style={styles.navContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.navScrollContent}
+          >
+            <TouchableOpacity 
+              style={[styles.navItem, activeTab === 'overview' && styles.navItemActive]}
+              onPress={() => setActiveTab('overview')}
+            >
+              <MaterialCommunityIcons 
+                name="view-dashboard" 
+                size={20} 
+                color={activeTab === 'overview' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeTab === 'overview' && styles.navTextActive]}>Dashboard</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeTab === 'appointments' && styles.navItemActive]}
+              onPress={() => setActiveTab('appointments')}
+            >
+              <MaterialCommunityIcons 
+                name="calendar-check" 
+                size={20} 
+                color={activeTab === 'appointments' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeTab === 'appointments' && styles.navTextActive]}>Appointments</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeTab === 'patients' && styles.navItemActive]}
+              onPress={() => setActiveTab('patients')}
+            >
+              <MaterialCommunityIcons 
+                name="account-group" 
+                size={20} 
+                color={activeTab === 'patients' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeTab === 'patients' && styles.navTextActive]}>Patients</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeTab === 'create-medical-record' && styles.navItemActive]}
+              onPress={() => setActiveTab('create-medical-record')}
+            >
+              <MaterialCommunityIcons 
+                name="clipboard-text" 
+                size={20} 
+                color={activeTab === 'create-medical-record' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeTab === 'create-medical-record' && styles.navTextActive]}>Medical Records</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeTab === 'create-prescription' && styles.navItemActive]}
+              onPress={() => setActiveTab('create-prescription')}
+            >
+              <MaterialCommunityIcons 
+                name="prescription" 
+                size={20} 
+                color={activeTab === 'create-prescription' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeTab === 'create-prescription' && styles.navTextActive]}>Prescriptions</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeTab === 'order-lab-tests' && styles.navItemActive]}
+              onPress={() => setActiveTab('order-lab-tests')}
+            >
+              <MaterialCommunityIcons 
+                name="test-tube" 
+                size={20} 
+                color={activeTab === 'order-lab-tests' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeTab === 'order-lab-tests' && styles.navTextActive]}>Lab Tests</RNText>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.navItem, activeTab === 'messages' && styles.navItemActive]}
+              onPress={() => setActiveTab('messages')}
+            >
+              <Ionicons 
+                name="chatbubbles-outline" 
+                size={20} 
+                color={activeTab === 'messages' ? '#1E4BA3' : '#6B7280'} 
+              />
+              <RNText style={[styles.navText, activeTab === 'messages' && styles.navTextActive]}>Messages</RNText>
+            </TouchableOpacity>
           </ScrollView>
         </View>
 
@@ -613,8 +638,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
-    paddingBottom: 16,
+    paddingTop: Platform.OS === 'android' ? 40 : 60,
+    paddingBottom: 20,
+    backgroundColor: '#1E4BA3',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -623,26 +649,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-      },
-      android: { elevation: 2 },
-    }),
   },
   greeting: {
     fontSize: isSmallScreen ? 14 : 16,
-    color: '#6B7280',
+    color: '#fff',
     fontWeight: '500',
+  },
+  userName: {
+    fontSize: isSmallScreen ? 18 : 20,
+    fontWeight: '700',
+    color: '#fff',
+    marginTop: 4,
   },
   doctorName: {
     fontSize: isSmallScreen ? 22 : 26,
@@ -668,18 +691,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#EF4444',
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-      },
-      android: { elevation: 2 },
-    }),
   },
   notificationBadge: {
     position: 'absolute',
@@ -697,6 +711,42 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
+  navContainer: {
+    backgroundColor: Platform.select({
+      ios: 'rgba(255, 255, 255, 0.95)',
+      android: '#FFFFFF',
+      default: '#FFFFFF',
+    }),
+  },
+  navScrollContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  navItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#F9FAFB',
+    marginRight: 8,
+    gap: 8,
+  },
+  navItemActive: {
+    backgroundColor: '#1E4BA315',
+    borderWidth: 1,
+    borderColor: '#1E4BA3',
+  },
+  navText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  navTextActive: {
+    color: '#1E4BA3',
+    fontWeight: '600',
+  },
   tabContainer: {
     paddingHorizontal: 20,
     marginBottom: 16,
@@ -712,7 +762,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tabActive: {
-    backgroundColor: 'rgba(53, 198, 235, 0.15)',
+    backgroundColor: 'rgba(30, 75, 163, 0.15)',
   },
   tabText: {
     fontSize: 14,
@@ -720,7 +770,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   tabTextActive: {
-    color: '#35c6eb',
+    color: '#1E4BA3',
     fontWeight: '600',
   },
   content: {
@@ -752,7 +802,10 @@ const styles = StyleSheet.create({
   transparentCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderWidth: 2,
-    borderColor: 'rgba(53, 198, 235, 0.4)',
+    borderColor: 'rgba(30, 75, 163, 0.4)',
+  },
+  whiteCard: {
+    backgroundColor: '#fff',
   },
   statNumber: {
     fontSize: isSmallScreen ? 28 : 32,
@@ -764,7 +817,7 @@ const styles = StyleSheet.create({
   statNumberTransparent: {
     fontSize: isSmallScreen ? 28 : 32,
     fontWeight: '700',
-    color: '#35c6eb',
+    color: '#1E4BA3',
     marginTop: 8,
     marginBottom: 4,
   },
@@ -803,7 +856,7 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 14,
-    color: '#35c6eb',
+    color: '#1E4BA3',
     fontWeight: '600',
   },
   quickActionsGrid: {
@@ -912,7 +965,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   searchTypeButtonActive: {
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
   },
   searchTypeText: {
     fontSize: 13,
@@ -940,7 +993,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1004,3 +1057,4 @@ const styles = StyleSheet.create({
     color: '#374151',
   },
 });
+

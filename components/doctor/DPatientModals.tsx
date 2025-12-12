@@ -164,19 +164,19 @@ export default function DPatientModals({
 
                 <View style={styles.actionGrid}>
                   <TouchableOpacity style={styles.actionCard} onPress={handleCreateMedicalRecord}>
-                    <MaterialCommunityIcons name="clipboard-text" size={24} color="#35c6eb" />
+                    <MaterialCommunityIcons name="clipboard-text" size={24} color="#1E4BA3" />
                     <RNText style={styles.actionCardText}>Medical Record</RNText>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.actionCard} onPress={handleIssuePrescription}>
-                    <MaterialCommunityIcons name="prescription" size={24} color="#35c6eb" />
+                    <MaterialCommunityIcons name="prescription" size={24} color="#1E4BA3" />
                     <RNText style={styles.actionCardText}>Prescription</RNText>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.actionCard} onPress={handleOrderLabTest}>
-                    <MaterialCommunityIcons name="test-tube" size={24} color="#35c6eb" />
+                    <MaterialCommunityIcons name="test-tube" size={24} color="#1E4BA3" />
                     <RNText style={styles.actionCardText}>Lab Test</RNText>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.actionCard}>
-                    <MaterialCommunityIcons name="message-text" size={24} color="#35c6eb" />
+                    <MaterialCommunityIcons name="message-text" size={24} color="#1E4BA3" />
                     <RNText style={styles.actionCardText}>Message</RNText>
                   </TouchableOpacity>
                 </View>
@@ -255,7 +255,7 @@ export default function DPatientModals({
 
             <ScrollView style={styles.body}>
               <View style={styles.qrInfo}>
-                <MaterialCommunityIcons name="qrcode" size={32} color="#35c6eb" />
+                <MaterialCommunityIcons name="qrcode" size={32} color="#1E4BA3" />
                 <RNText style={styles.qrText}>QR code will be generated automatically</RNText>
               </View>
 
@@ -286,7 +286,7 @@ export default function DPatientModals({
               ))}
 
               <TouchableOpacity style={styles.addButton} onPress={addMedication}>
-                <Ionicons name="add-circle-outline" size={20} color="#35c6eb" />
+                <Ionicons name="add-circle-outline" size={20} color="#1E4BA3" />
                 <RNText style={styles.addButtonText}>Add Another Medication</RNText>
               </TouchableOpacity>
 
@@ -342,7 +342,7 @@ export default function DPatientModals({
               <View style={styles.priorityContainer}>
                 {(['routine', 'urgent', 'stat'] as const).map(priority => (
                   <TouchableOpacity key={priority}
-                    style={[styles.priorityButton, labTest.priority === priority && { backgroundColor: priority === 'routine' ? '#35c6eb' : priority === 'urgent' ? '#F59E0B' : '#EF4444' }]}
+                    style={[styles.priorityButton, labTest.priority === priority && { backgroundColor: priority === 'routine' ? '#1E4BA3' : priority === 'urgent' ? '#F59E0B' : '#EF4444' }]}
                     onPress={() => setLabTest({ ...labTest, priority })}>
                     <RNText style={[styles.priorityText, labTest.priority === priority && { color: '#fff' }]}>
                       {priority.toUpperCase()}
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   saveButton: {
-    backgroundColor: '#35c6eb',
+    backgroundColor: '#1E4BA3',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
   qrText: {
     flex: 1,
     fontSize: 13,
-    color: '#35c6eb',
+    color: '#1E4BA3',
     fontWeight: '600',
   },
   qrPreviewContainer: {
@@ -531,7 +531,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#35c6eb',
+    borderColor: '#1E4BA3',
     borderStyle: 'dashed',
   },
   qrPreviewTitle: {
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#35c6eb',
+    color: '#1E4BA3',
   },
   priorityContainer: {
     flexDirection: 'row',
@@ -608,3 +608,4 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
 });
+

@@ -329,3 +329,4 @@ const styles = StyleSheet.create({
   footerItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   footerText: { fontSize: 11, color: '#6B7280' },
 });
+

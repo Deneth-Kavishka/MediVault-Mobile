@@ -648,7 +648,7 @@ export default function PharmacistDashboardScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 }}>
                   <RNText style={styles.menuTitle}>Medi Vault</RNText>
                   <TouchableOpacity onPress={() => setMenuOpen(false)}>
-                    <Ionicons name="close" size={28} color="#fff" />
+                    <Ionicons name="close" size={28} color="#1F2937" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -659,7 +659,7 @@ export default function PharmacistDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'dashboard' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('dashboard'); setActiveTab('overview'); setMenuOpen(false); }}
                 >
-                  <MaterialCommunityIcons name="view-dashboard" size={24} color="#fff" />
+                  <MaterialCommunityIcons name="view-dashboard" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Dashboard</RNText>
                 </TouchableOpacity>
 
@@ -667,7 +667,7 @@ export default function PharmacistDashboardScreen() {
                   style={[styles.menuItem, activeTab === 'inventory' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('dashboard'); setActiveTab('inventory'); setMenuOpen(false); }}
                 >
-                  <MaterialCommunityIcons name="package-variant" size={24} color="#fff" />
+                  <MaterialCommunityIcons name="package-variant" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Inventory</RNText>
                 </TouchableOpacity>
 
@@ -675,7 +675,7 @@ export default function PharmacistDashboardScreen() {
                   style={[styles.menuItem, activeTab === 'prescriptions' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('dashboard'); setActiveTab('prescriptions'); setMenuOpen(false); }}
                 >
-                  <MaterialCommunityIcons name="prescription" size={24} color="#fff" />
+                  <MaterialCommunityIcons name="prescription" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Prescriptions</RNText>
                 </TouchableOpacity>
 
@@ -683,7 +683,7 @@ export default function PharmacistDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'qr-scanner' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('qr-scanner'); setMenuOpen(false); }}
                 >
-                  <MaterialCommunityIcons name="qrcode-scan" size={24} color="#fff" />
+                  <MaterialCommunityIcons name="qrcode-scan" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>QR Scanner</RNText>
                 </TouchableOpacity>
 
@@ -691,7 +691,7 @@ export default function PharmacistDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'history' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('history'); setMenuOpen(false); }}
                 >
-                  <MaterialCommunityIcons name="history" size={24} color="#fff" />
+                  <MaterialCommunityIcons name="history" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Dispensing History</RNText>
                 </TouchableOpacity>
 
@@ -699,7 +699,7 @@ export default function PharmacistDashboardScreen() {
                   style={[styles.menuItem, activeTab === 'alerts' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('dashboard'); setActiveTab('alerts'); setMenuOpen(false); }}
                 >
-                  <Ionicons name="notifications-outline" size={24} color="#fff" />
+                  <Ionicons name="notifications-outline" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Stock Alerts</RNText>
                 </TouchableOpacity>
 
@@ -707,7 +707,7 @@ export default function PharmacistDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'appointments' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('appointments'); setMenuOpen(false); }}
                 >
-                  <MaterialCommunityIcons name="calendar-clock" size={24} color="#fff" />
+                  <MaterialCommunityIcons name="calendar-clock" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Appointments</RNText>
                 </TouchableOpacity>
 
@@ -721,7 +721,7 @@ export default function PharmacistDashboardScreen() {
                     router.replace('/(auth)/login' as any);
                   }}
                 >
-                  <Ionicons name="log-out-outline" size={24} color="#fff" />
+                  <Ionicons name="log-out-outline" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Back to Login</RNText>
                 </TouchableOpacity>
               </ScrollView>
@@ -1479,7 +1479,7 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     width: 280,
-    backgroundColor: '#0F3460',
+    backgroundColor: '#fff',
     height: '100%',
     ...Platform.select({
       ios: {
@@ -1492,13 +1492,13 @@ const styles = StyleSheet.create({
     }),
   },
   menuHeader: {
-    backgroundColor: '#1E4BA3',
+    backgroundColor: '#fff',
     paddingTop: Platform.OS === 'android' ? 40 : 60,
   },
   menuTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#fff',
+    color: '#11181C',
   },
   menuContent: {
     flex: 1,
@@ -1514,17 +1514,17 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
   },
   menuItemActive: {
-    backgroundColor: 'rgba(30, 75, 163, 0.3)',
-    borderLeftColor: '#fff',
+    backgroundColor: 'rgba(30, 75, 163, 0.12)',
+    borderLeftColor: '#1E4BA3',
   },
   menuItemText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#fff',
+    color: '#1F2937',
   },
   menuDivider: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#E5E7EB',
     marginVertical: 12,
     marginHorizontal: 20,
   },

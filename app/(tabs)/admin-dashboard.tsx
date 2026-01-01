@@ -238,7 +238,7 @@ export default function AdminDashboardScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 }}>
                   <RNText style={styles.menuTitle}>Medi Vault</RNText>
                   <TouchableOpacity onPress={() => setMenuOpen(false)}>
-                    <Ionicons name="close" size={28} color="#fff" />
+                    <Ionicons name="close" size={28} color="#1F2937" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -249,7 +249,7 @@ export default function AdminDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'dashboard' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('dashboard'); setMenuOpen(false); }}
                 >
-                  <MaterialCommunityIcons name="view-dashboard" size={24} color="#fff" />
+                  <MaterialCommunityIcons name="view-dashboard" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Dashboard</RNText>
                 </TouchableOpacity>
 
@@ -257,7 +257,7 @@ export default function AdminDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'users' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('users'); setMenuOpen(false); }}
                 >
-                  <MaterialCommunityIcons name="account-cog" size={24} color="#fff" />
+                  <MaterialCommunityIcons name="account-cog" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>User Management</RNText>
                 </TouchableOpacity>
 
@@ -265,7 +265,7 @@ export default function AdminDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'patients' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('patients'); setMenuOpen(false); }}
                 >
-                  <MaterialCommunityIcons name="account-heart" size={24} color="#fff" />
+                  <MaterialCommunityIcons name="account-heart" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Patients</RNText>
                 </TouchableOpacity>
 
@@ -273,7 +273,7 @@ export default function AdminDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'doctors' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('doctors'); setMenuOpen(false); }}
                 >
-                  <MaterialCommunityIcons name="doctor" size={24} color="#fff" />
+                  <MaterialCommunityIcons name="doctor" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Doctors</RNText>
                 </TouchableOpacity>
 
@@ -281,7 +281,7 @@ export default function AdminDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'appointments' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('appointments'); setMenuOpen(false); }}
                 >
-                  <MaterialCommunityIcons name="calendar-clock" size={24} color="#fff" />
+                  <MaterialCommunityIcons name="calendar-clock" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Appointments</RNText>
                 </TouchableOpacity>
 
@@ -289,7 +289,7 @@ export default function AdminDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'messages' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('messages'); setMenuOpen(false); }}
                 >
-                  <Ionicons name="chatbubbles-outline" size={24} color="#fff" />
+                  <Ionicons name="chatbubbles-outline" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Messages</RNText>
                 </TouchableOpacity>
 
@@ -297,7 +297,7 @@ export default function AdminDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'notifications' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('notifications'); setMenuOpen(false); }}
                 >
-                  <Ionicons name="notifications-outline" size={24} color="#fff" />
+                  <Ionicons name="notifications-outline" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Notifications</RNText>
                 </TouchableOpacity>
 
@@ -305,7 +305,7 @@ export default function AdminDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'reports' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('reports'); setMenuOpen(false); }}
                 >
-                  <MaterialCommunityIcons name="file-chart" size={24} color="#fff" />
+                  <MaterialCommunityIcons name="file-chart" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Reports</RNText>
                 </TouchableOpacity>
 
@@ -313,7 +313,7 @@ export default function AdminDashboardScreen() {
                   style={[styles.menuItem, activeNav === 'settings' && styles.menuItemActive]}
                   onPress={() => { setActiveNav('settings'); setMenuOpen(false); }}
                 >
-                  <Ionicons name="settings-outline" size={24} color="#fff" />
+                  <Ionicons name="settings-outline" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>System Settings</RNText>
                 </TouchableOpacity>
 
@@ -327,7 +327,7 @@ export default function AdminDashboardScreen() {
                     router.replace('/(auth)/login' as any);
                   }}
                 >
-                  <Ionicons name="log-out-outline" size={24} color="#fff" />
+                  <Ionicons name="log-out-outline" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Back to Login</RNText>
                 </TouchableOpacity>
               </ScrollView>
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     width: 280,
-    backgroundColor: '#0F3460',
+    backgroundColor: '#fff',
     height: '100%',
     ...Platform.select({
       ios: {
@@ -874,13 +874,13 @@ const styles = StyleSheet.create({
     }),
   },
   menuHeader: {
-    backgroundColor: '#1E4BA3',
+    backgroundColor: '#fff',
     paddingTop: Platform.OS === 'android' ? 40 : 60,
   },
   menuTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#fff',
+    color: '#11181C',
   },
   menuContent: {
     flex: 1,
@@ -896,17 +896,17 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
   },
   menuItemActive: {
-    backgroundColor: 'rgba(30, 75, 163, 0.3)',
-    borderLeftColor: '#fff',
+    backgroundColor: 'rgba(30, 75, 163, 0.12)',
+    borderLeftColor: '#1E4BA3',
   },
   menuItemText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#fff',
+    color: '#1F2937',
   },
   menuDivider: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#E5E7EB',
     marginVertical: 12,
     marginHorizontal: 20,
   },

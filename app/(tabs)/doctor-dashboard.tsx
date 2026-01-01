@@ -467,7 +467,7 @@ export default function DoctorDashboard() {
               <View style={styles.menuHeader}>
                 <RNText style={styles.menuTitle}>Medi Vault</RNText>
                 <TouchableOpacity onPress={() => setMenuOpen(false)}>
-                  <Ionicons name="close" size={28} color="#fff" />
+                  <Ionicons name="close" size={28} color="#1F2937" />
                 </TouchableOpacity>
               </View>
 
@@ -482,7 +482,7 @@ export default function DoctorDashboard() {
                   <MaterialCommunityIcons 
                     name="view-dashboard" 
                     size={24} 
-                    color="#fff" 
+                    color="#1F2937" 
                   />
                   <RNText style={styles.menuItemText}>Dashboard</RNText>
                 </TouchableOpacity>
@@ -497,7 +497,7 @@ export default function DoctorDashboard() {
                   <MaterialCommunityIcons 
                     name="calendar-check" 
                     size={24} 
-                    color="#fff" 
+                    color="#1F2937" 
                   />
                   <RNText style={styles.menuItemText}>Appointments</RNText>
                 </TouchableOpacity>
@@ -512,7 +512,7 @@ export default function DoctorDashboard() {
                   <MaterialCommunityIcons 
                     name="account-group" 
                     size={24} 
-                    color="#fff" 
+                    color="#1F2937" 
                   />
                   <RNText style={styles.menuItemText}>Patients</RNText>
                 </TouchableOpacity>
@@ -527,7 +527,7 @@ export default function DoctorDashboard() {
                   <MaterialCommunityIcons 
                     name="clipboard-text" 
                     size={24} 
-                    color="#fff" 
+                    color="#1F2937" 
                   />
                   <RNText style={styles.menuItemText}>Medical Records</RNText>
                 </TouchableOpacity>
@@ -542,7 +542,7 @@ export default function DoctorDashboard() {
                   <MaterialCommunityIcons 
                     name="prescription" 
                     size={24} 
-                    color="#fff" 
+                    color="#1F2937" 
                   />
                   <RNText style={styles.menuItemText}>Prescriptions</RNText>
                 </TouchableOpacity>
@@ -557,7 +557,7 @@ export default function DoctorDashboard() {
                   <MaterialCommunityIcons 
                     name="test-tube" 
                     size={24} 
-                    color="#fff" 
+                    color="#1F2937" 
                   />
                   <RNText style={styles.menuItemText}>Lab Tests</RNText>
                 </TouchableOpacity>
@@ -572,7 +572,7 @@ export default function DoctorDashboard() {
                   <Ionicons 
                     name="chatbubbles-outline" 
                     size={24} 
-                    color="#fff" 
+                    color="#1F2937" 
                   />
                   <RNText style={styles.menuItemText}>Messages</RNText>
                 </TouchableOpacity>
@@ -587,7 +587,7 @@ export default function DoctorDashboard() {
                   <Ionicons 
                     name="notifications-outline" 
                     size={24} 
-                    color="#fff" 
+                    color="#1F2937" 
                   />
                   <RNText style={styles.menuItemText}>Notifications</RNText>
                 </TouchableOpacity>
@@ -602,7 +602,7 @@ export default function DoctorDashboard() {
                     router.replace('/(auth)/login' as any);
                   }}
                 >
-                  <Ionicons name="arrow-back" size={24} color="#fff" />
+                  <Ionicons name="arrow-back" size={24} color="#1F2937" />
                   <RNText style={styles.menuItemText}>Back to Login</RNText>
                 </TouchableOpacity>
               </ScrollView>
@@ -856,7 +856,7 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     width: 280,
-    backgroundColor: '#0F3460',
+    backgroundColor: '#fff',
     height: '100%',
     ...Platform.select({
       ios: {
@@ -877,12 +877,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'android' ? 40 : 60,
     paddingBottom: 20,
-    backgroundColor: '#1E4BA3',
+    backgroundColor: '#fff',
   },
   menuTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#fff',
+    color: '#11181C',
   },
   menuContent: {
     flex: 1,
@@ -898,21 +898,21 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
   },
   menuItemActive: {
-    backgroundColor: 'rgba(30, 75, 163, 0.3)',
-    borderLeftColor: '#fff',
+    backgroundColor: 'rgba(30, 75, 163, 0.12)',
+    borderLeftColor: '#1E4BA3',
   },
   menuItemText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#fff',
+    color: '#1F2937',
   },
   menuItemTextActive: {
-    color: '#fff',
+    color: '#1F2937',
     fontWeight: '600',
   },
   menuDivider: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#E5E7EB',
     marginVertical: 12,
     marginHorizontal: 20,
   },

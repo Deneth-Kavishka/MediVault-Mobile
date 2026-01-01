@@ -7,6 +7,7 @@ import {
     Alert,
     Dimensions,
     ImageBackground,
+    Modal,
     Platform,
     RefreshControl,
     Text as RNText,
@@ -22,6 +23,7 @@ import DMessages from '../../components/doctor/DMessages';
 import DPatientModals from '../../components/doctor/DPatientModals';
 import DPatients from '../../components/doctor/DPatients';
 import OrderLabTest from '../../components/doctor/OrderLabTest';
+import ManageNotifications from '../../components/lab-technician/ManageNotifications';
 import { sessionService } from '../../src/services/sessionService';
 import { storageService } from '../../src/services/storageService';
 // Animation imports removed - dashboard cards don't need animations for better performance
@@ -91,7 +93,8 @@ export default function DoctorDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userInfo, setUserInfo] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'appointments' | 'patients' | 'messages' | 'create-prescription' | 'order-lab-tests' | 'create-medical-record'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'appointments' | 'patients' | 'messages' | 'notifications' | 'create-prescription' | 'order-lab-tests' | 'create-medical-record'>('overview');
+  const [menuOpen, setMenuOpen] = useState(false);
   
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -437,116 +440,180 @@ export default function DoctorDashboard() {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity 
-              style={styles.backButton} 
-              onPress={async () => {
-                await sessionService.clearSession();
-                router.replace('/(auth)/login' as any);
-              }}
+              style={styles.hamburgerButton} 
+              onPress={() => setMenuOpen(true)}
             >
-              <Ionicons name="arrow-back" size={24} color="#fff" />
+              <Ionicons name="menu" size={28} color="#fff" />
             </TouchableOpacity>
             <View>
               <RNText style={styles.greeting}>Welcome Back, Doctor</RNText>
               <RNText style={styles.userName}>Dr. {userInfo?.fullName || 'Doctor'}</RNText>
             </View>
           </View>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={24} color="#fff" />
+          <TouchableOpacity style={styles.profileButton}>
+            <Ionicons name="person-circle-outline" size={32} color="#fff" />
           </TouchableOpacity>
         </View>
 
-        {/* Navigation Bar */}
-        <View style={styles.navContainer}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.navScrollContent}
-          >
-            <TouchableOpacity 
-              style={[styles.navItem, activeTab === 'overview' && styles.navItemActive]}
-              onPress={() => setActiveTab('overview')}
-            >
-              <MaterialCommunityIcons 
-                name="view-dashboard" 
-                size={20} 
-                color={activeTab === 'overview' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeTab === 'overview' && styles.navTextActive]}>Dashboard</RNText>
-            </TouchableOpacity>
+        {/* Hamburger Menu Modal */}
+        <Modal
+          visible={menuOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setMenuOpen(false)}
+        >
+          <View style={styles.menuOverlay}>
+            <View style={styles.menuContainer}>
+              <View style={styles.menuHeader}>
+                <RNText style={styles.menuTitle}>Medi Vault</RNText>
+                <TouchableOpacity onPress={() => setMenuOpen(false)}>
+                  <Ionicons name="close" size={28} color="#fff" />
+                </TouchableOpacity>
+              </View>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeTab === 'appointments' && styles.navItemActive]}
-              onPress={() => setActiveTab('appointments')}
-            >
-              <MaterialCommunityIcons 
-                name="calendar-check" 
-                size={20} 
-                color={activeTab === 'appointments' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeTab === 'appointments' && styles.navTextActive]}>Appointments</RNText>
-            </TouchableOpacity>
+              <ScrollView style={styles.menuContent} showsVerticalScrollIndicator={false}>
+                <TouchableOpacity 
+                  style={[styles.menuItem, activeTab === 'overview' && styles.menuItemActive]}
+                  onPress={() => {
+                    setActiveTab('overview');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <MaterialCommunityIcons 
+                    name="view-dashboard" 
+                    size={24} 
+                    color="#fff" 
+                  />
+                  <RNText style={styles.menuItemText}>Dashboard</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeTab === 'patients' && styles.navItemActive]}
-              onPress={() => setActiveTab('patients')}
-            >
-              <MaterialCommunityIcons 
-                name="account-group" 
-                size={20} 
-                color={activeTab === 'patients' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeTab === 'patients' && styles.navTextActive]}>Patients</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.menuItem, activeTab === 'appointments' && styles.menuItemActive]}
+                  onPress={() => {
+                    setActiveTab('appointments');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <MaterialCommunityIcons 
+                    name="calendar-check" 
+                    size={24} 
+                    color="#fff" 
+                  />
+                  <RNText style={styles.menuItemText}>Appointments</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeTab === 'create-medical-record' && styles.navItemActive]}
-              onPress={() => setActiveTab('create-medical-record')}
-            >
-              <MaterialCommunityIcons 
-                name="clipboard-text" 
-                size={20} 
-                color={activeTab === 'create-medical-record' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeTab === 'create-medical-record' && styles.navTextActive]}>Medical Records</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.menuItem, activeTab === 'patients' && styles.menuItemActive]}
+                  onPress={() => {
+                    setActiveTab('patients');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <MaterialCommunityIcons 
+                    name="account-group" 
+                    size={24} 
+                    color="#fff" 
+                  />
+                  <RNText style={styles.menuItemText}>Patients</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeTab === 'create-prescription' && styles.navItemActive]}
-              onPress={() => setActiveTab('create-prescription')}
-            >
-              <MaterialCommunityIcons 
-                name="prescription" 
-                size={20} 
-                color={activeTab === 'create-prescription' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeTab === 'create-prescription' && styles.navTextActive]}>Prescriptions</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.menuItem, activeTab === 'create-medical-record' && styles.menuItemActive]}
+                  onPress={() => {
+                    setActiveTab('create-medical-record');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <MaterialCommunityIcons 
+                    name="clipboard-text" 
+                    size={24} 
+                    color="#fff" 
+                  />
+                  <RNText style={styles.menuItemText}>Medical Records</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeTab === 'order-lab-tests' && styles.navItemActive]}
-              onPress={() => setActiveTab('order-lab-tests')}
-            >
-              <MaterialCommunityIcons 
-                name="test-tube" 
-                size={20} 
-                color={activeTab === 'order-lab-tests' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeTab === 'order-lab-tests' && styles.navTextActive]}>Lab Tests</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.menuItem, activeTab === 'create-prescription' && styles.menuItemActive]}
+                  onPress={() => {
+                    setActiveTab('create-prescription');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <MaterialCommunityIcons 
+                    name="prescription" 
+                    size={24} 
+                    color="#fff" 
+                  />
+                  <RNText style={styles.menuItemText}>Prescriptions</RNText>
+                </TouchableOpacity>
 
+                <TouchableOpacity 
+                  style={[styles.menuItem, activeTab === 'order-lab-tests' && styles.menuItemActive]}
+                  onPress={() => {
+                    setActiveTab('order-lab-tests');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <MaterialCommunityIcons 
+                    name="test-tube" 
+                    size={24} 
+                    color="#fff" 
+                  />
+                  <RNText style={styles.menuItemText}>Lab Tests</RNText>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.menuItem, activeTab === 'messages' && styles.menuItemActive]}
+                  onPress={() => {
+                    setActiveTab('messages');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Ionicons 
+                    name="chatbubbles-outline" 
+                    size={24} 
+                    color="#fff" 
+                  />
+                  <RNText style={styles.menuItemText}>Messages</RNText>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={[styles.menuItem, activeTab === 'notifications' && styles.menuItemActive]}
+                  onPress={() => {
+                    setActiveTab('notifications');
+                    setMenuOpen(false);
+                  }}
+                >
+                  <Ionicons 
+                    name="notifications-outline" 
+                    size={24} 
+                    color="#fff" 
+                  />
+                  <RNText style={styles.menuItemText}>Notifications</RNText>
+                </TouchableOpacity>
+
+                <View style={styles.menuDivider} />
+
+                <TouchableOpacity 
+                  style={styles.menuItem}
+                  onPress={async () => {
+                    setMenuOpen(false);
+                    await sessionService.clearSession();
+                    router.replace('/(auth)/login' as any);
+                  }}
+                >
+                  <Ionicons name="arrow-back" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Back to Login</RNText>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
             <TouchableOpacity 
-              style={[styles.navItem, activeTab === 'messages' && styles.navItemActive]}
-              onPress={() => setActiveTab('messages')}
-            >
-              <Ionicons 
-                name="chatbubbles-outline" 
-                size={20} 
-                color={activeTab === 'messages' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeTab === 'messages' && styles.navTextActive]}>Messages</RNText>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
+              style={styles.menuBackdrop}
+              activeOpacity={1}
+              onPress={() => setMenuOpen(false)}
+            />
+          </View>
+        </Modal>
 
         {/* Content */}
         <ScrollView
@@ -579,6 +646,7 @@ export default function DoctorDashboard() {
             />
           )}
           {activeTab === 'messages' && <DMessages />}
+          {activeTab === 'notifications' && <ManageNotifications embedded showBackground={false} />}
         </ScrollView>
 
         {/* Patient Modals */}
@@ -608,6 +676,65 @@ export default function DoctorDashboard() {
           updateMedication={updateMedication}
           removeMedication={removeMedication}
         />
+
+        {/* Bottom Navigation Bar */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveTab('overview')}
+          >
+            <Ionicons
+              name={activeTab === 'overview' ? 'home' : 'home-outline'}
+              size={24}
+              color={activeTab === 'overview' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeTab === 'overview' && styles.bottomNavTextActive]}>
+              Home
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveTab('appointments')}
+          >
+            <MaterialCommunityIcons
+              name={activeTab === 'appointments' ? 'calendar-check' : 'calendar-check-outline'}
+              size={24}
+              color={activeTab === 'appointments' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeTab === 'appointments' && styles.bottomNavTextActive]}>
+              Appointments
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveTab('patients')}
+          >
+            <MaterialCommunityIcons
+              name={activeTab === 'patients' ? 'account-group' : 'account-group-outline'}
+              size={24}
+              color={activeTab === 'patients' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeTab === 'patients' && styles.bottomNavTextActive]}>
+              Patients
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveTab('create-prescription')}
+          >
+            <MaterialCommunityIcons
+              name={activeTab === 'create-prescription' ? 'prescription' : 'prescription'}
+              size={24}
+              color={activeTab === 'create-prescription' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeTab === 'create-prescription' && styles.bottomNavTextActive]}>
+              Prescribe
+            </RNText>
+          </TouchableOpacity>
+        </View>
       </ImageBackground>
     </View>
   );
@@ -648,6 +775,14 @@ const styles = StyleSheet.create({
     gap: 12,
     flex: 1,
   },
+  hamburgerButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   backButton: {
     width: 44,
     height: 44,
@@ -687,7 +822,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-  logoutButton: {
+  profileButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -710,6 +845,76 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 10,
     fontWeight: '700',
+  },
+  menuOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  menuBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  menuContainer: {
+    width: 280,
+    backgroundColor: '#0F3460',
+    height: '100%',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        shadowOffset: { width: 2, height: 0 },
+      },
+      android: {
+        elevation: 16,
+      },
+    }),
+  },
+  menuHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 60,
+    paddingBottom: 20,
+    backgroundColor: '#1E4BA3',
+  },
+  menuTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  menuContent: {
+    flex: 1,
+    paddingTop: 16,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: 'transparent',
+  },
+  menuItemActive: {
+    backgroundColor: 'rgba(30, 75, 163, 0.3)',
+    borderLeftColor: '#fff',
+  },
+  menuItemText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#fff',
+  },
+  menuItemTextActive: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginVertical: 12,
+    marginHorizontal: 20,
   },
   navContainer: {
     backgroundColor: Platform.select({
@@ -936,19 +1141,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'transparent',
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
     paddingHorizontal: 14,
+    paddingVertical: 0,
     height: 50,
     marginBottom: 12,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
     fontSize: 15,
     color: '#1F2937',
   },
@@ -1055,6 +1255,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#374151',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#1E4BA3',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
+    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+    paddingTop: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  bottomNavItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  bottomNavText: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  bottomNavTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
 });
 

@@ -58,17 +58,16 @@ export default function DPatients({
     <View style={styles.section}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+        <View style={styles.searchBarWrapper}>
           <TextInput
-            style={styles.searchInput}
+            style={styles.searchBar}
             placeholder="Search patients..."
             placeholderTextColor="#9CA3AF"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery ? (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <TouchableOpacity style={styles.clearButton} onPress={() => setSearchQuery('')}>
               <Ionicons name="close-circle" size={20} color="#9CA3AF" />
             </TouchableOpacity>
           ) : null}
@@ -125,22 +124,26 @@ const styles = StyleSheet.create({
   searchContainer: {
     marginBottom: 20,
   },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    height: 50,
+  searchBarWrapper: {
+    position: 'relative',
     marginBottom: 12,
   },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
+  searchBar: {
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 14,
+    paddingVertical: 0,
+    paddingRight: 44,
+    height: 50,
     fontSize: 15,
     color: '#1F2937',
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 12,
+    top: 15,
   },
   searchTypeContainer: {
     flexDirection: 'row',

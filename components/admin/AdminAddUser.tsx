@@ -1,17 +1,18 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-    Alert,
-    ImageBackground,
-    Modal,
-    Platform,
-    Text as RNText,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  ImageBackground,
+  Platform,
+  Text as RNText,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
+import { API_BASE_URL } from '../../src/config/constants';
 
 interface AdminAddUserProps {
   onBack?: () => void;
@@ -22,24 +23,19 @@ export default function AdminAddUser({ onBack, onUserAdded }: AdminAddUserProps)
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    phone: '',
     role: 'patient' as 'admin' | 'doctor' | 'patient' | 'pharmacist' | 'lab_technician',
-    specialization: '',
     username: '',
     password: '',
     confirmPassword: '',
-    nic: '',
-    address: '',
-    dateOfBirth: '',
   });
 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [tempYear, setTempYear] = useState(new Date().getFullYear());
-  const [tempMonth, setTempMonth] = useState(new Date().getMonth());
-  const [tempDay, setTempDay] = useState(new Date().getDate());
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'idle' | 'info' | 'success' | 'error'; text: string }>({
+    type: 'idle',
+    text: '',
+  });
 
   const roles = [
     { value: 'patient', label: 'Patient', icon: 'account', color: '#3B82F6' },
@@ -62,12 +58,6 @@ export default function AdminAddUser({ onBack, onUserAdded }: AdminAddUserProps)
       newErrors.email = 'Invalid email format';
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^[\d\s\-\+\(\)]+$/.test(formData.phone)) {
-      newErrors.phone = 'Invalid phone format';
-    }
-
     if (!formData.username.trim()) {
       newErrors.username = 'Username is required';
     } else if (formData.username.length < 4) {
@@ -76,73 +66,98 @@ export default function AdminAddUser({ onBack, onUserAdded }: AdminAddUserProps)
 
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
     }
 
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    if (formData.role === 'doctor' && !formData.specialization.trim()) {
-      newErrors.specialization = 'Specialization is required for doctors';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) {
       Alert.alert('Validation Error', 'Please fix the errors and try again.');
+      setSubmitMessage({ type: 'error', text: 'Please fix the highlighted fields and try again.' });
       return;
     }
 
-    Alert.alert(
-      'Confirm User Creation',
-      `Create new ${formData.role} account for ${formData.fullName}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Create',
-          onPress: () => {
-            // In production, this would call your API
-            const newUser = {
-              id: Date.now().toString(),
-              fullName: formData.fullName,
-              email: formData.email,
-              phone: formData.phone,
-              role: formData.role,
-              status: 'active',
-              createdAt: new Date().toISOString(),
-              specialization: formData.specialization || undefined,
-              nic: formData.nic || undefined,
-              address: formData.address || undefined,
-              dateOfBirth: formData.dateOfBirth || undefined,
-            };
+    setLoading(true);
+    setSubmitMessage({ type: 'info', text: 'Creating user…' });
+    try {
+      // Call the backend API to create user
+      const url = `${API_BASE_URL}/users/create`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
 
-            Alert.alert('Success', 'User created successfully!');
-            onUserAdded?.(newUser);
-            
-            // Reset form
-            setFormData({
-              fullName: '',
-              email: '',
-              phone: '',
-              role: 'patient',
-              specialization: '',
-              username: '',
-              password: '',
-              confirmPassword: '',
-              nic: '',
-              address: '',
-              dateOfBirth: '',
-            });
-            setErrors({});
-          },
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
-      ]
-    );
+        signal: controller.signal,
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          email: formData.email,
+          username: formData.username,
+          password: formData.password,
+          role: formData.role,
+        }),
+      });
+
+      clearTimeout(timeout);
+
+      // Some servers return non-JSON error pages; don't let that break the flow.
+      const rawText = await response.text();
+      const data = (() => {
+        try {
+          return rawText ? JSON.parse(rawText) : null;
+        } catch {
+          return null;
+        }
+      })();
+
+      if (response.ok && data?.success) {
+        Alert.alert('Success', 'User created successfully!');
+        setSubmitMessage({ type: 'success', text: 'User created successfully!' });
+        onUserAdded?.(data.data);
+        
+        // Reset form
+        setFormData({
+          fullName: '',
+          email: '',
+          role: 'patient',
+          username: '',
+          password: '',
+          confirmPassword: '',
+        });
+        setErrors({});
+      } else {
+        const serverMessage =
+          data?.message ||
+          (rawText && rawText.length < 500 ? rawText : '') ||
+          'Failed to create user';
+        const validationDetail = data?.errors?.[0]?.msg ? `\n\n${data.errors[0].msg}` : '';
+        const errorDetail = data?.error ? `\n\n${data.error}` : '';
+        const msg = `HTTP ${response.status} - ${serverMessage}${validationDetail}${errorDetail}`;
+        Alert.alert('Error', msg);
+        setSubmitMessage({ type: 'error', text: msg });
+      }
+    } catch (error) {
+      console.error('Error creating user:', error);
+      const isAbort = String(error).toLowerCase().includes('abort');
+      const msg = isAbort
+        ? `Request timed out. Is the backend running?\n\nBase URL: ${API_BASE_URL}`
+        : `Unable to connect to the server.\n\nBase URL: ${API_BASE_URL}\n\n${String(error)}`;
+      Alert.alert('Connection Error', msg);
+      setSubmitMessage({ type: 'error', text: msg });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -158,15 +173,10 @@ export default function AdminAddUser({ onBack, onUserAdded }: AdminAddUserProps)
             setFormData({
               fullName: '',
               email: '',
-              phone: '',
               role: 'patient',
-              specialization: '',
               username: '',
               password: '',
               confirmPassword: '',
-              nic: '',
-              address: '',
-              dateOfBirth: '',
             });
             setErrors({});
           },
@@ -189,6 +199,8 @@ export default function AdminAddUser({ onBack, onUserAdded }: AdminAddUserProps)
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
       >
         {/* Role Selection Card */}
         <View style={styles.card}>
@@ -250,231 +262,36 @@ export default function AdminAddUser({ onBack, onUserAdded }: AdminAddUserProps)
 
           <View style={styles.inputGroup}>
             <RNText style={styles.label}>Full Name *</RNText>
-            <View style={[styles.inputContainer, errors.fullName && styles.inputError]}>
-              <Ionicons name="person-outline" size={20} color="#6B7280" />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter full name"
-                placeholderTextColor="#9CA3AF"
-                value={formData.fullName}
-                onChangeText={(text) => {
-                  setFormData({ ...formData, fullName: text });
-                  if (errors.fullName) setErrors({ ...errors, fullName: '' });
-                }}
-              />
-            </View>
+            <TextInput
+              style={[styles.inputContainer, errors.fullName && styles.inputError]}
+              placeholder="Enter full name"
+              placeholderTextColor="#9CA3AF"
+              value={formData.fullName}
+              onChangeText={(text) => {
+                setFormData({ ...formData, fullName: text });
+                if (errors.fullName) setErrors({ ...errors, fullName: '' });
+              }}
+            />
             {errors.fullName && <RNText style={styles.errorText}>{errors.fullName}</RNText>}
           </View>
 
           <View style={styles.inputGroup}>
             <RNText style={styles.label}>Email Address *</RNText>
-            <View style={[styles.inputContainer, errors.email && styles.inputError]}>
-              <Ionicons name="mail-outline" size={20} color="#6B7280" />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter email address"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={formData.email}
-                onChangeText={(text) => {
-                  setFormData({ ...formData, email: text });
-                  if (errors.email) setErrors({ ...errors, email: '' });
-                }}
-              />
-            </View>
+            <TextInput
+              style={[styles.inputContainer, errors.email && styles.inputError]}
+              placeholder="Enter email address"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={formData.email}
+              onChangeText={(text) => {
+                setFormData({ ...formData, email: text });
+                if (errors.email) setErrors({ ...errors, email: '' });
+              }}
+            />
             {errors.email && <RNText style={styles.errorText}>{errors.email}</RNText>}
           </View>
-
-          <View style={styles.inputGroup}>
-            <RNText style={styles.label}>Phone Number *</RNText>
-            <View style={[styles.inputContainer, errors.phone && styles.inputError]}>
-              <Ionicons name="call-outline" size={20} color="#6B7280" />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter phone number"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="phone-pad"
-                value={formData.phone}
-                onChangeText={(text) => {
-                  setFormData({ ...formData, phone: text });
-                  if (errors.phone) setErrors({ ...errors, phone: '' });
-                }}
-              />
-            </View>
-            {errors.phone && <RNText style={styles.errorText}>{errors.phone}</RNText>}
-          </View>
-
-          <View style={styles.inputGroup}>
-            <RNText style={styles.label}>NIC Number</RNText>
-            <View style={styles.inputContainer}>
-              <Ionicons name="card-outline" size={20} color="#6B7280" />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter NIC number"
-                placeholderTextColor="#9CA3AF"
-                value={formData.nic}
-                onChangeText={(text) => setFormData({ ...formData, nic: text })}
-              />
-            </View>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <RNText style={styles.label}>Date of Birth</RNText>
-            <TouchableOpacity 
-              style={styles.inputContainer}
-              activeOpacity={0.7}
-              onPress={() => {
-                if (formData.dateOfBirth) {
-                  const date = new Date(formData.dateOfBirth);
-                  setTempYear(date.getFullYear());
-                  setTempMonth(date.getMonth());
-                  setTempDay(date.getDate());
-                } else {
-                  const today = new Date();
-                  setTempYear(today.getFullYear() - 20);
-                  setTempMonth(today.getMonth());
-                  setTempDay(today.getDate());
-                }
-                setShowDatePicker(true);
-              }}
-            >
-              <Ionicons name="calendar-outline" size={20} color="#6B7280" />
-              <RNText style={[styles.input, !formData.dateOfBirth && { color: '#9CA3AF' }]}>
-                {formData.dateOfBirth || 'Select date of birth'}
-              </RNText>
-            </TouchableOpacity>
-          </View>
-
-          {/* Custom Date Picker Modal */}
-          <Modal
-            transparent={true}
-            animationType="slide"
-            visible={showDatePicker}
-            onRequestClose={() => setShowDatePicker(false)}
-          >
-            <TouchableOpacity 
-              style={styles.modalOverlay}
-              activeOpacity={1}
-              onPress={() => setShowDatePicker(false)}
-            >
-              <View style={styles.datePickerModal}>
-                <View style={styles.datePickerHeader}>
-                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                    <RNText style={styles.datePickerCancel}>Cancel</RNText>
-                  </TouchableOpacity>
-                  <RNText style={styles.datePickerTitle}>Select Date of Birth</RNText>
-                  <TouchableOpacity onPress={() => {
-                    const formattedDate = `${tempYear}-${String(tempMonth + 1).padStart(2, '0')}-${String(tempDay).padStart(2, '0')}`;
-                    setFormData({ ...formData, dateOfBirth: formattedDate });
-                    setShowDatePicker(false);
-                  }}>
-                    <RNText style={styles.datePickerDone}>Done</RNText>
-                  </TouchableOpacity>
-                </View>
-                
-                <View style={styles.datePickerContent}>
-                  {/* Year Picker */}
-                  <View style={styles.pickerColumn}>
-                    <RNText style={styles.pickerLabel}>Year</RNText>
-                    <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
-                      {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i).map((year) => (
-                        <TouchableOpacity
-                          key={year}
-                          style={[styles.pickerItem, tempYear === year && styles.pickerItemSelected]}
-                          onPress={() => setTempYear(year)}
-                        >
-                          <RNText style={[styles.pickerItemText, tempYear === year && styles.pickerItemTextSelected]}>
-                            {year}
-                          </RNText>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  </View>
-
-                  {/* Month Picker */}
-                  <View style={styles.pickerColumn}>
-                    <RNText style={styles.pickerLabel}>Month</RNText>
-                    <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
-                      {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, index) => (
-                        <TouchableOpacity
-                          key={index}
-                          style={[styles.pickerItem, tempMonth === index && styles.pickerItemSelected]}
-                          onPress={() => setTempMonth(index)}
-                        >
-                          <RNText style={[styles.pickerItemText, tempMonth === index && styles.pickerItemTextSelected]}>
-                            {month}
-                          </RNText>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  </View>
-
-                  {/* Day Picker */}
-                  <View style={styles.pickerColumn}>
-                    <RNText style={styles.pickerLabel}>Day</RNText>
-                    <ScrollView style={styles.pickerScroll} showsVerticalScrollIndicator={false}>
-                      {Array.from({ length: new Date(tempYear, tempMonth + 1, 0).getDate() }, (_, i) => i + 1).map((day) => (
-                        <TouchableOpacity
-                          key={day}
-                          style={[styles.pickerItem, tempDay === day && styles.pickerItemSelected]}
-                          onPress={() => setTempDay(day)}
-                        >
-                          <RNText style={[styles.pickerItemText, tempDay === day && styles.pickerItemTextSelected]}>
-                            {day}
-                          </RNText>
-                        </TouchableOpacity>
-                      ))}
-                    </ScrollView>
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </Modal>
-
-          <View style={styles.inputGroup}>
-            <RNText style={styles.label}>Address</RNText>
-            <View style={styles.inputContainer}>
-              <Ionicons name="location-outline" size={20} color="#6B7280" />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter address"
-                placeholderTextColor="#9CA3AF"
-                value={formData.address}
-                onChangeText={(text) => setFormData({ ...formData, address: text })}
-                multiline
-              />
-            </View>
-          </View>
         </View>
-
-        {/* Professional Information (for doctors) */}
-        {formData.role === 'doctor' && (
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <MaterialCommunityIcons name="medical-bag" size={24} color="#10B981" />
-              <RNText style={styles.cardTitle}>Professional Information</RNText>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <RNText style={styles.label}>Specialization *</RNText>
-              <View style={[styles.inputContainer, errors.specialization && styles.inputError]}>
-                <MaterialCommunityIcons name="stethoscope" size={20} color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g., Cardiologist, Neurologist"
-                  placeholderTextColor="#9CA3AF"
-                  value={formData.specialization}
-                  onChangeText={(text) => {
-                    setFormData({ ...formData, specialization: text });
-                    if (errors.specialization) setErrors({ ...errors, specialization: '' });
-                  }}
-                />
-              </View>
-              {errors.specialization && <RNText style={styles.errorText}>{errors.specialization}</RNText>}
-            </View>
-          </View>
-        )}
 
         {/* Account Security */}
         <View style={styles.card}>
@@ -485,65 +302,56 @@ export default function AdminAddUser({ onBack, onUserAdded }: AdminAddUserProps)
 
           <View style={styles.inputGroup}>
             <RNText style={styles.label}>Username *</RNText>
-            <View style={[styles.inputContainer, errors.username && styles.inputError]}>
-              <Ionicons name="person-circle-outline" size={20} color="#6B7280" />
-              <TextInput
-                style={styles.input}
-                placeholder="Enter username"
-                placeholderTextColor="#9CA3AF"
-                autoCapitalize="none"
-                value={formData.username}
-                onChangeText={(text) => {
-                  setFormData({ ...formData, username: text });
-                  if (errors.username) setErrors({ ...errors, username: '' });
-                }}
-              />
-            </View>
+            <TextInput
+              style={[styles.inputContainer, errors.username && styles.inputError]}
+              placeholder="Enter username"
+              placeholderTextColor="#9CA3AF"
+              autoCapitalize="none"
+              value={formData.username}
+              onChangeText={(text) => {
+                setFormData({ ...formData, username: text });
+                if (errors.username) setErrors({ ...errors, username: '' });
+              }}
+            />
             {errors.username && <RNText style={styles.errorText}>{errors.username}</RNText>}
           </View>
 
           <View style={styles.inputGroup}>
             <RNText style={styles.label}>Password *</RNText>
-            <View style={[styles.inputContainer, errors.password && styles.inputError]}>
-              <Ionicons name="lock-closed-outline" size={20} color="#6B7280" />
               <TextInput
-                style={styles.input}
-                placeholder="Enter password (min. 8 characters)"
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry
-                value={formData.password}
-                onChangeText={(text) => {
-                  setFormData({ ...formData, password: text });
-                  if (errors.password) setErrors({ ...errors, password: '' });
-                }}
-              />
-            </View>
+              style={[styles.inputContainer, errors.password && styles.inputError]}
+              placeholder="Enter password (min. 6 characters)"
+              placeholderTextColor="#9CA3AF"
+              secureTextEntry
+              value={formData.password}
+              onChangeText={(text) => {
+                setFormData({ ...formData, password: text });
+                if (errors.password) setErrors({ ...errors, password: '' });
+              }}
+            />
             {errors.password && <RNText style={styles.errorText}>{errors.password}</RNText>}
           </View>
 
           <View style={styles.inputGroup}>
             <RNText style={styles.label}>Confirm Password *</RNText>
-            <View style={[styles.inputContainer, errors.confirmPassword && styles.inputError]}>
-              <Ionicons name="lock-closed-outline" size={20} color="#6B7280" />
-              <TextInput
-                style={styles.input}
-                placeholder="Re-enter password"
-                placeholderTextColor="#9CA3AF"
-                secureTextEntry
-                value={formData.confirmPassword}
-                onChangeText={(text) => {
-                  setFormData({ ...formData, confirmPassword: text });
-                  if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' });
-                }}
-              />
-            </View>
+            <TextInput
+              style={[styles.inputContainer, errors.confirmPassword && styles.inputError]}
+              placeholder="Re-enter password"
+              placeholderTextColor="#9CA3AF"
+              secureTextEntry
+              value={formData.confirmPassword}
+              onChangeText={(text) => {
+                setFormData({ ...formData, confirmPassword: text });
+                if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' });
+              }}
+            />
             {errors.confirmPassword && <RNText style={styles.errorText}>{errors.confirmPassword}</RNText>}
           </View>
 
           <View style={styles.passwordHint}>
             <Ionicons name="information-circle" size={16} color="#6B7280" />
             <RNText style={styles.passwordHintText}>
-              Password must be at least 8 characters long
+              Password must be at least 6 characters long
             </RNText>
           </View>
         </View>
@@ -561,11 +369,32 @@ export default function AdminAddUser({ onBack, onUserAdded }: AdminAddUserProps)
           <TouchableOpacity 
             style={styles.submitButton}
             onPress={handleSubmit}
+            disabled={loading}
           >
-            <Ionicons name="checkmark-circle" size={20} color="#fff" />
-            <RNText style={styles.submitButtonText}>Create User</RNText>
+            {loading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                <RNText style={styles.submitButtonText}>Create User</RNText>
+              </>
+            )}
           </TouchableOpacity>
         </View>
+
+        {submitMessage.type !== 'idle' && !!submitMessage.text && (
+          <View style={styles.submitMessageWrap}>
+            <RNText
+              style={[
+                styles.submitMessageText,
+                submitMessage.type === 'success' && styles.submitMessageSuccess,
+                submitMessage.type === 'error' && styles.submitMessageError,
+              ]}
+            >
+              {submitMessage.text}
+            </RNText>
+          </View>
+        )}
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -712,25 +541,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    paddingHorizontal: 16,
+    paddingVertical: 0,
+    fontSize: 15,
+    color: '#1F2937',
+    fontWeight: '400',
+    height: 48,
   },
   inputError: {
     borderColor: '#EF4444',
-    backgroundColor: '#FEF2F2',
-  },
-  input: {
-    flex: 1,
-    fontSize: 15,
-    color: '#1F2937',
-    padding: 0,
   },
   errorText: {
     fontSize: 12,
@@ -751,6 +574,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6B7280',
     flex: 1,
+  },
+  touchableInput: {
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 16,
+    paddingVertical: 0,
+    height: 48,
+    justifyContent: 'center',
+  },
+  datePickerText: {
+    fontSize: 15,
+    color: '#1F2937',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -802,6 +639,20 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 20,
+  },
+  submitMessageWrap: {
+    marginTop: 12,
+    paddingHorizontal: 4,
+  },
+  submitMessageText: {
+    fontSize: 12,
+    color: '#374151',
+  },
+  submitMessageSuccess: {
+    color: '#059669',
+  },
+  submitMessageError: {
+    color: '#DC2626',
   },
   modalOverlay: {
     flex: 1,

@@ -1,4 +1,5 @@
 import { authApi } from '@/api/auth';
+import { API_BASE_URL } from '@/config/constants';
 import { storageService } from '@/services/storageService';
 import { LoginCredentials } from '@/types/auth';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -6,17 +7,17 @@ import { Link, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
-    Alert,
-    Dimensions,
-    ImageBackground,
-    KeyboardAvoidingView,
-    Platform,
-    Text as RNText,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  Dimensions,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
+  Text as RNText,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useFadeIn, useScaleIn, useSlideInLeft } from '../../utils/animations';
@@ -27,13 +28,13 @@ const isTablet = width >= 768;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'patient' | 'doctor' | 'pharmacist' | 'admin'>('patient');
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ username?: string; password?: string }>({});
 
   // Slow animations (600-800ms)
   const backButtonAnim = useFadeIn(0, 400);
@@ -44,13 +45,9 @@ export default function LoginScreen() {
 
   const validate = () => {
     const e: typeof errors = {};
-    const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-    const testUsernames = ['admin123', 'doctor123', 'patient123', 'pharmacists123', 'labtec123'];
 
-    if (!email) {
-      e.email = 'Email is required';
-    } else if (!testUsernames.includes(email.toLowerCase()) && !emailRegex.test(email)) {
-      e.email = 'Enter a valid email';
+    if (!username.trim()) {
+      e.username = 'Username or email is required';
     }
 
     if (!password) {
@@ -61,77 +58,62 @@ export default function LoginScreen() {
 
     setErrors(e);
     const isValid = Object.keys(e).length === 0;
-    console.log('Validation result:', { isValid, errors: e, email, password: '***' });
+    console.log('Validation result:', { isValid, errors: e, username, password: '***' });
     return isValid;
   };
+
+  const getDashboardRouteForRole = (roleRaw: unknown) => {
+    const role = String(roleRaw ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/-+/g, '_');
+
+    if (role === 'admin') return '/(tabs)/admin-dashboard';
+    if (role === 'doctor') return '/(tabs)/doctor-dashboard';
+    if (role === 'pharmacist') return '/(tabs)/pharmacist-dashboard';
+    if (role === 'lab_technician' || role === 'labtechnician') return '/(tabs)/lab-technician-dashboard';
+    return '/(tabs)';
+  };
+
+  const extractAuthFromLoginResponse = (response: any) => {
+    // Handles both:
+    // 1) ApiResponse<{user, token}> returned by apiClient
+    // 2) AxiosResponse<ApiResponse<{user, token}>> if a raw axios call is used
+    const apiResponse =
+      response?.success !== undefined
+        ? response
+        : response?.data?.success !== undefined
+          ? response.data
+          : null;
+
+    const authData = apiResponse?.data ?? response?.data ?? response;
+    return {
+      token: authData?.token,
+      user: authData?.user,
+      sessionId: authData?.sessionId,
+    };
+  };
+
   const handleLogin = async () => {
     console.log('handleLogin called');
     if (!validate()) {
       console.log('Validation failed');
       return;
     }
-    console.log('Validation passed, starting login...');
+    console.log('Validation passed, starting login...', { API_BASE_URL });
+    setSubmitError(null);
     setLoading(true);
 
-    // Testing mode: Check username for role-based navigation
-    const username = email.toLowerCase();
-    console.log('Username:', username);
-    
-    if (username === 'admin123' || username === 'doctor123' || username === 'patient123' || username === 'pharmacists123' || username === 'labtec123') {
-      try {
-        // Store mock authentication data for testing
-        const mockToken = 'test-token-' + username;
-        const mockUser = {
-          id: username === 'admin123' ? 1 : username === 'doctor123' ? 2 : username === 'pharmacists123' ? 4 : username === 'labtec123' ? 5 : 3,
-          email: username,
-          fullName: username === 'admin123' ? 'Admin User' : username === 'doctor123' ? 'Doctor User' : username === 'pharmacists123' ? 'Pharmacist User' : username === 'labtec123' ? 'Lab Technician User' : 'Patient User',
-          phone: '+1234567890',
-          role: (username === 'admin123' ? 'admin' : username === 'doctor123' ? 'doctor' : username === 'pharmacists123' ? 'pharmacist' : username === 'labtec123' ? 'lab_technician' : 'patient') as 'patient' | 'doctor' | 'pharmacist' | 'lab_technician' | 'admin',
-          isActive: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          lastLogin: new Date().toISOString()
-        };
-        
-        await storageService.setToken(mockToken);
-        await storageService.setUser(mockUser);
-        
-        // Set session expiry based on remember me
-        const expiryTime = rememberMe 
-          ? Date.now() + (30 * 24 * 60 * 60 * 1000) // 30 days
-          : Date.now() + (24 * 60 * 60 * 1000); // 24 hours
-        
-        await storageService.setSessionExpiry(expiryTime);
-        await storageService.setRememberMe(rememberMe);
-        
-        setLoading(false);
-        
-        // Navigate based on role immediately after storing credentials
-        if (mockUser.role === 'admin') {
-          router.replace('/(tabs)/admin-dashboard' as any);
-        } else if (mockUser.role === 'doctor') {
-          router.replace('/(tabs)/doctor-dashboard' as any);
-        } else if (mockUser.role === 'pharmacist') {
-          router.replace('/(tabs)/pharmacist-dashboard' as any);
-        } else if (mockUser.role === 'lab_technician') {
-          router.replace('/(tabs)/lab-technician-dashboard' as any);
-        } else {
-          router.replace('/(tabs)' as any);
-        }
-        
-        return;
-      } catch (error: any) {
-        setLoading(false);
-        Alert.alert('Login Failed', 'An error occurred during test login');
-        return;
-      }
-    }
-
-    // For other usernames, try actual API call
     try {
-      const credentials: LoginCredentials = { email, password, role };
+      const credentials: LoginCredentials = { username: username.trim(), password, remember: rememberMe };
       const response = await authApi.login(credentials);
-      const { token, user, sessionId } = response.data as any;
+      const { token, user, sessionId } = extractAuthFromLoginResponse(response);
+
+      if (!token || !user) {
+        console.log('Login response missing token/user:', response);
+        throw new Error('Login failed: invalid server response');
+      }
       
       // Store authentication data
       await storageService.setToken(token);
@@ -152,21 +134,30 @@ export default function LoginScreen() {
 
       setLoading(false);
 
-      // Navigate based on user role from API response
-      if (user.role === 'admin') {
-        router.replace('/(tabs)/admin-dashboard' as any);
-      } else if (user.role === 'doctor') {
-        router.replace('/(tabs)/doctor-dashboard' as any);
-      } else if (user.role === 'pharmacist') {
-        router.replace('/(tabs)/pharmacist-dashboard' as any);
-      } else if (user.role === 'lab_technician') {
-        router.replace('/(tabs)/lab-technician-dashboard' as any);
-      } else {
-        router.replace('/(tabs)' as any);
-      }
+      const route = getDashboardRouteForRole(user.role);
+      console.log('Login success; routing by role:', { role: user.role, route });
+      router.replace(route as any);
 
     } catch (error: any) {
-      Alert.alert('Login Failed', error.response?.data?.message || 'An error occurred');
+      const rawMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'An error occurred';
+
+      const isNetworkError =
+        error?.code === 'NETWORK_ERROR' ||
+        /no response from server/i.test(String(rawMessage));
+
+      const hint = isNetworkError
+        ? `\n\nCannot reach the backend at:\n${API_BASE_URL}\n\nIf you are using a REAL phone, set EXPO_PUBLIC_API_BASE_URL to your PC IP (same Wi‑Fi), e.g. http://192.168.1.5:5000/api, then restart Expo.`
+        : '';
+
+      const message = `${rawMessage}${hint}`;
+      setSubmitError(message);
+
+      if (Platform.OS !== 'web') {
+        Alert.alert('Login Failed', message);
+      }
       setLoading(false);
     }
   };
@@ -209,78 +200,67 @@ export default function LoginScreen() {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             bounces={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
           >
 
             {/* Login Card */}
-            <View style={styles.cardContainer}>
-              <Animated.View style={[styles.card, formAnim]}>
-                {/* Welcome Icon */}
-                <Animated.View style={[styles.welcomeIconContainer, logoAnim]}>
-                  <View style={styles.welcomeIconBadge}>
-                    <MaterialCommunityIcons name="heart-pulse" size={32} color="#fff" />
-                  </View>
-                </Animated.View>
+            <Animated.View style={[styles.card, formAnim]}>
+              {/* Welcome Icon */}
+              <Animated.View style={[styles.welcomeIconContainer, logoAnim]}>
+                <View style={styles.welcomeIconBadge}>
+                  <MaterialCommunityIcons name="heart-pulse" size={32} color="#fff" />
+                </View>
+              </Animated.View>
 
-                {/* Card Header */}
-                <Animated.View style={[styles.cardHeader, titleAnim]}>
-                  <RNText style={styles.cardTitle}>Welcome Back</RNText>
-                  <RNText style={styles.cardSubtitle}>Sign in to access your healthcare dashboard</RNText>
-                </Animated.View>
+              {/* Card Header */}
+              <Animated.View style={[styles.cardHeader, titleAnim]}>
+                <RNText style={styles.cardTitle}>Welcome Back</RNText>
+                <RNText style={styles.cardSubtitle}>Sign in to access your healthcare dashboard</RNText>
+              </Animated.View>
 
-                {/* Form Fields */}
-                <View style={styles.formSection}>
+              {/* Form Fields */}
+              <View style={styles.formSection}>
                   {/* Username/Email Input */}
                   <View style={styles.inputWrapper}>
                     <RNText style={styles.inputLabel}>Username</RNText>
-                    <View style={[styles.inputContainer, errors.email && styles.inputError]}>
-                      <Ionicons name="person-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-                      <TextInput
-                        style={styles.input}
-                        placeholder="demo-medico37@gmail.com"
-                        placeholderTextColor="#9CA3AF"
-                        value={email}
-                        onChangeText={(text) => {
-                          setEmail(text);
-                          if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
-                        }}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                      />
-                    </View>
-                    {errors.email && <RNText style={styles.errorText}>{errors.email}</RNText>}
+                    <TextInput
+                      style={[styles.inputContainer, errors.username && styles.inputError]}
+                      placeholder="demo-medico37@gmail.com"
+                      placeholderTextColor="#9CA3AF"
+                      value={username}
+                      onChangeText={(text) => {
+                        setUsername(text);
+                        if (submitError) setSubmitError(null);
+                        if (errors.username) setErrors((prev) => ({ ...prev, username: undefined }));
+                      }}
+                      keyboardType="default"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                    {errors.username && <RNText style={styles.errorText}>{errors.username}</RNText>}
                   </View>
 
                   {/* Password Input */}
                   <View style={styles.inputWrapper}>
                     <RNText style={styles.inputLabel}>Password</RNText>
-                    <View style={[styles.inputContainer, errors.password && styles.inputError]}>
-                      <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-                      <TextInput
-                        style={styles.input}
-                        placeholder="••••••••"
-                        placeholderTextColor="#9CA3AF"
-                        secureTextEntry={!showPassword}
-                        autoCapitalize="none"
-                        value={password}
-                        onChangeText={(text) => {
-                          setPassword(text);
-                          if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
-                        }}
-                        onSubmitEditing={(e) => {
-                          e.preventDefault?.();
-                          handleLogin();
-                        }}
-                        returnKeyType="go"
-                      />
-                      <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                        <Ionicons 
-                          name={showPassword ? "eye-outline" : "eye-off-outline"} 
-                          size={20} 
-                          color="#6B7280" 
-                        />
-                      </TouchableOpacity>
-                    </View>
+                    <TextInput
+                      style={[styles.inputContainer, errors.password && styles.inputError]}
+                      placeholder="••••••••"
+                      placeholderTextColor="#9CA3AF"
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      value={password}
+                      onChangeText={(text) => {
+                        setPassword(text);
+                        if (submitError) setSubmitError(null);
+                        if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                      }}
+                      onSubmitEditing={(e) => {
+                        handleLogin();
+                      }}
+                      returnKeyType="go"
+                    />
                     {errors.password && <RNText style={styles.errorText}>{errors.password}</RNText>}
                   </View>
 
@@ -308,12 +288,7 @@ export default function LoginScreen() {
                   <TouchableOpacity
                     style={[styles.loginButton, loading && styles.loginButtonDisabled]}
                     disabled={loading}
-                    onPress={(e) => {
-                      e.preventDefault?.();
-                      e.stopPropagation?.();
-                      console.log('Sign In button clicked');
-                      handleLogin();
-                    }}
+                    onPress={handleLogin}
                     activeOpacity={0.8}
                   >
                     <View style={styles.buttonContent}>
@@ -323,6 +298,8 @@ export default function LoginScreen() {
                       {!loading && <Ionicons name="arrow-forward" size={20} color="#fff" style={{ marginLeft: 8 }} />}
                     </View>
                   </TouchableOpacity>
+
+                  {!!submitError && <RNText style={styles.submitErrorText}>{submitError}</RNText>}
 
                   {/* Register Link */}
                   <View style={styles.registerSection}>
@@ -335,7 +312,6 @@ export default function LoginScreen() {
                   </View>
                 </View>
               </Animated.View>
-            </View>
 
             {/* Footer */}
             <Animated.View style={[styles.footer, footerAnim]}>
@@ -375,6 +351,7 @@ const styles = StyleSheet.create({
     paddingVertical: isSmallScreen ? 30 : 40,
     paddingHorizontal: isTablet ? 40 : 20,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   
   // Back Button
@@ -401,11 +378,8 @@ const styles = StyleSheet.create({
   },
 
   // Card Styles
-  cardContainer: {
-    alignItems: 'center',
-  },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
     borderRadius: isSmallScreen ? 20 : 24,
     padding: isSmallScreen ? 28 : isTablet ? 40 : 32,
     maxWidth: isTablet ? 500 : isSmallScreen ? '100%' : 400,
@@ -473,31 +447,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
     borderRadius: 12,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#E5E7EB',
     paddingHorizontal: 16,
+    paddingVertical: 0,
+    fontSize: isSmallScreen ? 14 : 15,
+    color: '#1F2937',
+    fontWeight: '500',
     height: isSmallScreen ? 48 : 54,
   },
   inputError: {
     borderColor: '#EF4444',
-    backgroundColor: '#FEF2F2',
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: isSmallScreen ? 14 : 15,
-    color: '#1F2937',
-    fontWeight: '500',
-  },
-  eyeIcon: {
-    padding: 4,
-    marginLeft: 8,
   },
   errorText: {
     color: '#EF4444',
@@ -505,6 +467,13 @@ const styles = StyleSheet.create({
     marginTop: 6,
     marginLeft: 4,
     fontWeight: '500',
+  },
+  submitErrorText: {
+    color: '#EF4444',
+    fontSize: 12,
+    marginTop: 12,
+    textAlign: 'center',
+    fontWeight: '600',
   },
 
   // Options Row (Remember Me & Forgot Password)

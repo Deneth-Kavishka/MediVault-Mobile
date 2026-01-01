@@ -61,7 +61,7 @@ function RootLayoutNav() {
     const checkAuthAndNavigate = async () => {
       const inAuthGroup = segments[0] === '(auth)';
       const inTabsGroup = segments[0] === '(tabs)';
-      const currentAuthPage = segments[1];
+      const currentAuthPage: string = segments.length > 1 ? (segments as string[])[1] : '';
 
       // Check current authentication status from storage
       const token = await storageService.getToken();
@@ -136,6 +136,28 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  // Add error boundary
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    // Catch and log any unhandled errors
+    const errorHandler = (error: ErrorEvent) => {
+      console.error('Global error:', error);
+      setHasError(true);
+    };
+    
+    // Error handling is already set up globally in errorHandler.ts
+    // React Native uses ErrorUtils instead of window.addEventListener
+  }, []);
+
+  if (hasError) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <ActivityIndicator size="large" color="#1E4BA3ff" />
+      </View>
+    );
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

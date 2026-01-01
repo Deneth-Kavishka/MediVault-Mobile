@@ -51,6 +51,13 @@ export default function TabLayout() {
           href: null, // Hide from tab bar
         }}
       />
+      <Tabs.Screen
+        name="lab-technician-dashboard"
+        options={{
+          title: 'Lab Technician',
+          href: null, // Hide from tab bar
+        }}
+      />
     </Tabs>
   );
 }

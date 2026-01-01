@@ -3,17 +3,17 @@ import { Link, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import {
-  Alert,
-  Dimensions,
-  ImageBackground,
-  KeyboardAvoidingView,
-  Platform,
-  Text as RNText,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View
+    Alert,
+    Dimensions,
+    ImageBackground,
+    KeyboardAvoidingView,
+    Platform,
+    Text as RNText,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -105,22 +105,19 @@ export default function ForgotPasswordScreen() {
                 <View style={styles.form}>
                   <View style={styles.inputWrapper}>
                     <RNText style={styles.inputLabel}>Email Address</RNText>
-                    <View style={[styles.inputContainer, error && styles.inputError]}>
-                      <Ionicons name="mail-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Enter your email"
-                        placeholderTextColor="#9CA3AF"
-                        value={email}
-                        onChangeText={(text) => {
-                          setEmail(text);
-                          if (error) setError('');
-                        }}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                      />
-                    </View>
+                    <TextInput
+                      style={[styles.inputContainer, error && styles.inputError]}
+                      placeholder="Enter your email"
+                      placeholderTextColor="#9CA3AF"
+                      value={email}
+                      onChangeText={(text) => {
+                        setEmail(text);
+                        if (error) setError('');
+                      }}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
                     {error && <RNText style={styles.errorText}>{error}</RNText>}
                   </View>
 
@@ -286,27 +283,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
     borderRadius: 12,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#E5E7EB',
     paddingHorizontal: 16,
+    paddingVertical: 0,
     height: isSmallScreen ? 48 : 54,
+    fontSize: isSmallScreen ? 14 : 15,
+    color: '#1F2937',
+    fontWeight: '400',
   },
   inputError: {
     borderColor: '#EF4444',
-    backgroundColor: '#FEF2F2',
-  },
-  inputIcon: {
-    marginRight: 12,
-  },
-  input: {
-    flex: 1,
-    fontSize: isSmallScreen ? 14 : 15,
-    color: '#1F2937',
-    fontWeight: '500',
   },
   errorText: {
     color: '#EF4444',

@@ -1,5 +1,7 @@
+import { notificationsApi } from '@/api/notifications';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ImageBackground,
     Platform,
@@ -12,7 +14,7 @@ import {
 
 interface Notification {
   id: string;
-  type: 'appointment' | 'user' | 'system' | 'alert' | 'payment' | 'message';
+  type: string;
   title: string;
   description: string;
   time: string;
@@ -22,166 +24,127 @@ interface Notification {
   color: string;
 }
 
-export default function AdminNotifications() {
-  const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'system'>('all');
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'alert',
-      title: 'System Alert',
-      description: 'Database backup completed successfully',
-      time: '5 min ago',
-      read: false,
-      priority: 'high',
-      icon: 'alert-circle',
-      color: '#FF3B30'
-    },
-    {
-      id: '2',
-      type: 'user',
-      title: 'New User Registration',
-      description: 'Dr. Sarah Johnson has registered as a new doctor',
-      time: '15 min ago',
-      read: false,
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString();
+}
+
+function toPresentation(n: any): Notification {
+  const type = String(n?.type || 'system');
+  const title = String(n?.title || 'Notification');
+  const description = String(n?.message || '');
+  const read = Boolean(n?.read);
+  const time = formatTime(String(n?.createdAt || ''));
+
+  const metaEvent = String(n?.metadata?.event || '');
+
+  // Basic mapping for icons/colors in the existing UI style.
+  if (type === 'user' || metaEvent === 'user_created') {
+    return {
+      id: String(n?.id),
+      type,
+      title,
+      description,
+      time,
+      read,
       priority: 'medium',
       icon: 'person-add',
-      color: '#007AFF'
-    },
-    {
-      id: '3',
-      type: 'appointment',
-      title: 'Appointment Scheduled',
-      description: '12 new appointments scheduled for today',
-      time: '1 hour ago',
-      read: true,
-      priority: 'medium',
-      icon: 'calendar',
-      color: '#34C759'
-    },
-    {
-      id: '4',
-      type: 'system',
-      title: 'System Update Available',
-      description: 'Version 2.6.0 is available for update',
-      time: '2 hours ago',
-      read: false,
-      priority: 'low',
-      icon: 'download',
-      color: '#5856D6'
-    },
-    {
-      id: '5',
-      type: 'payment',
-      title: 'Payment Received',
-      description: 'Payment of $2,450 received from patient ID #1523',
-      time: '3 hours ago',
-      read: true,
-      priority: 'medium',
-      icon: 'cash',
-      color: '#10B981'
-    },
-    {
-      id: '6',
-      type: 'message',
-      title: 'New Message',
-      description: 'You have 5 unread messages from doctors',
-      time: '4 hours ago',
-      read: false,
-      priority: 'medium',
-      icon: 'mail',
-      color: '#FF9500'
-    },
-    {
-      id: '7',
-      type: 'alert',
-      title: 'Security Alert',
-      description: 'Multiple failed login attempts detected',
-      time: '5 hours ago',
-      read: true,
-      priority: 'high',
-      icon: 'shield-checkmark',
-      color: '#FF3B30'
-    },
-    {
-      id: '8',
-      type: 'user',
-      title: 'User Account Deactivated',
-      description: 'Patient account #2341 has been deactivated',
-      time: '6 hours ago',
-      read: true,
-      priority: 'low',
-      icon: 'person-remove',
-      color: '#6B7280'
-    },
-    {
-      id: '9',
-      type: 'appointment',
-      title: 'Appointment Cancelled',
-      description: '3 appointments cancelled for Dr. Smith',
-      time: '8 hours ago',
-      read: true,
-      priority: 'medium',
-      icon: 'close-circle',
-      color: '#FF9500'
-    },
-    {
-      id: '10',
-      type: 'system',
-      title: 'Maintenance Scheduled',
-      description: 'System maintenance scheduled for Dec 15, 2025',
-      time: '1 day ago',
-      read: true,
+      color: '#007AFF',
+    };
+  }
+
+  if (type === 'system' || metaEvent === 'account_created') {
+    return {
+      id: String(n?.id),
+      type,
+      title,
+      description,
+      time,
+      read,
       priority: 'low',
       icon: 'construct',
-      color: '#8B5CF6'
-    },
-    {
-      id: '11',
-      type: 'payment',
-      title: 'Payment Failed',
-      description: 'Payment transaction failed for invoice #INV-2024',
-      time: '1 day ago',
-      read: false,
-      priority: 'high',
-      icon: 'card',
-      color: '#FF3B30'
-    },
-    {
-      id: '12',
-      type: 'user',
-      title: 'Doctor Verification Pending',
-      description: 'Dr. Michael Chen awaiting profile verification',
-      time: '2 days ago',
-      read: true,
-      priority: 'medium',
-      icon: 'checkmark-circle',
-      color: '#FF9500'
+      color: '#5856D6',
+    };
+  }
+
+  return {
+    id: String(n?.id),
+    type,
+    title,
+    description,
+    time,
+    read,
+    priority: 'low',
+    icon: 'alert-circle',
+    color: '#FF3B30',
+  };
+}
+
+export default function AdminNotifications() {
+  const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'system'>('all');
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const res = await notificationsApi.list();
+      if (!res?.success) throw new Error(res?.message || 'Failed to load notifications');
+      const mapped = (Array.isArray(res.data) ? res.data : []).map(toPresentation);
+      setNotifications(mapped);
+    } catch (e: any) {
+      setLoadError(String(e?.message || e));
+    } finally {
+      setLoading(false);
     }
-  ]);
+  }, []);
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(notif =>
-        notif.id === id ? { ...notif, read: true } : notif
-      )
-    );
+  useEffect(() => {
+    void refresh();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refresh();
+      return undefined;
+    }, [refresh])
+  );
+
+  const markAsRead = async (id: string) => {
+    try {
+      await notificationsApi.markRead(id);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    } catch {
+      // ignore
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(notif => ({ ...notif, read: true }))
-    );
+  const markAllAsRead = async () => {
+    try {
+      await notificationsApi.markAllRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch {
+      // ignore
+    }
   };
 
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
+  const deleteNotification = async (id: string) => {
+    try {
+      await notificationsApi.delete(id);
+    } catch {
+      // ignore
+    }
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
-  const filteredNotifications = notifications.filter(notif => {
+  const filteredNotifications = useMemo(() => notifications.filter(notif => {
     if (activeTab === 'unread') return !notif.read;
     if (activeTab === 'system') return notif.type === 'system' || notif.type === 'alert';
     return true;
-  });
+  }), [notifications, activeTab]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const systemCount = notifications.filter(n => n.type === 'system' || n.type === 'alert').length;
@@ -209,6 +172,15 @@ export default function AdminNotifications() {
             <Ionicons name="checkmark-done" size={20} color="#007AFF" />
             <RNText style={styles.markAllText}>Mark All Read</RNText>
           </TouchableOpacity>
+        </View>
+
+        <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
+          <TouchableOpacity onPress={refresh} disabled={loading}>
+            <RNText style={{ color: '#007AFF', fontWeight: '600' }}>
+              {loading ? 'Refreshing…' : 'Refresh'}
+            </RNText>
+          </TouchableOpacity>
+          {!!loadError && <RNText style={{ color: '#EF4444', marginTop: 6 }}>{loadError}</RNText>}
         </View>
 
         {/* Stats */}

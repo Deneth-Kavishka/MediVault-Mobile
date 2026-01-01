@@ -170,91 +170,70 @@ export default function RegisterScreen() {
                 <View style={styles.formSection}>
                   {/* Full Name */}
                   <View style={styles.inputWrapper}>
-                    <View style={[styles.inputContainer, errors.fullName && styles.inputError]}>
-                      <Ionicons name="person-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Full Name"
-                        placeholderTextColor="#9CA3AF"
-                        value={formData.fullName}
-                        onChangeText={(val) => updateForm('fullName', val)}
-                        autoCapitalize="words"
-                      />
-                    </View>
+                    <TextInput
+                      style={[styles.inputContainer, errors.fullName && styles.inputError]}
+                      placeholder="Full Name"
+                      placeholderTextColor="#9CA3AF"
+                      value={formData.fullName}
+                      onChangeText={(val) => updateForm('fullName', val)}
+                      autoCapitalize="words"
+                    />
                     {errors.fullName && <RNText style={styles.errorText}>{errors.fullName}</RNText>}
                   </View>
 
                   {/* Email */}
                   <View style={styles.inputWrapper}>
-                    <View style={[styles.inputContainer, errors.email && styles.inputError]}>
-                      <Ionicons name="mail-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Email Address"
-                        placeholderTextColor="#9CA3AF"
-                        value={formData.email}
-                        onChangeText={(val) => updateForm('email', val)}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                      />
-                    </View>
+                    <TextInput
+                      style={[styles.inputContainer, errors.email && styles.inputError]}
+                      placeholder="Email Address"
+                      placeholderTextColor="#9CA3AF"
+                      value={formData.email}
+                      onChangeText={(val) => updateForm('email', val)}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
                     {errors.email && <RNText style={styles.errorText}>{errors.email}</RNText>}
                   </View>
 
                   {/* Phone */}
                   <View style={styles.inputWrapper}>
-                    <View style={[styles.inputContainer, errors.phone && styles.inputError]}>
-                      <Ionicons name="call-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Phone Number"
-                        placeholderTextColor="#9CA3AF"
-                        value={formData.phone}
-                        onChangeText={(val) => updateForm('phone', val)}
-                        keyboardType="phone-pad"
-                      />
-                    </View>
+                    <TextInput
+                      style={[styles.inputContainer, errors.phone && styles.inputError]}
+                      placeholder="Phone Number"
+                      placeholderTextColor="#9CA3AF"
+                      value={formData.phone}
+                      onChangeText={(val) => updateForm('phone', val)}
+                      keyboardType="phone-pad"
+                    />
                     {errors.phone && <RNText style={styles.errorText}>{errors.phone}</RNText>}
                   </View>
 
                   {/* Password */}
                   <View style={styles.inputWrapper}>
-                    <View style={[styles.inputContainer, errors.password && styles.inputError]}>
-                      <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Password (min 8 characters)"
-                        placeholderTextColor="#9CA3AF"
-                        secureTextEntry={!showPassword}
-                        autoCapitalize="none"
-                        value={formData.password}
-                        onChangeText={(val) => updateForm('password', val)}
-                      />
-                      <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                        <Ionicons name={showPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#6B7280" />
-                      </TouchableOpacity>
-                    </View>
+                    <TextInput
+                      style={[styles.inputContainer, errors.password && styles.inputError]}
+                      placeholder="Password (min 8 characters)"
+                      placeholderTextColor="#9CA3AF"
+                      secureTextEntry
+                      autoCapitalize="none"
+                      value={formData.password}
+                      onChangeText={(val) => updateForm('password', val)}
+                    />
                     {errors.password && <RNText style={styles.errorText}>{errors.password}</RNText>}
                   </View>
 
                   {/* Confirm Password */}
                   <View style={styles.inputWrapper}>
-                    <View style={[styles.inputContainer, errors.confirmPassword && styles.inputError]}>
-                      <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Confirm Password"
-                        placeholderTextColor="#9CA3AF"
-                        secureTextEntry={!showConfirmPassword}
-                        autoCapitalize="none"
-                        value={formData.confirmPassword}
-                        onChangeText={(val) => updateForm('confirmPassword', val)}
-                      />
-                      <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
-                        <Ionicons name={showConfirmPassword ? "eye-outline" : "eye-off-outline"} size={20} color="#6B7280" />
-                      </TouchableOpacity>
-                    </View>
+                    <TextInput
+                      style={[styles.inputContainer, errors.confirmPassword && styles.inputError]}
+                      placeholder="Confirm Password"
+                      placeholderTextColor="#9CA3AF"
+                      secureTextEntry
+                      autoCapitalize="none"
+                      value={formData.confirmPassword}
+                      onChangeText={(val) => updateForm('confirmPassword', val)}
+                    />
                     {errors.confirmPassword && <RNText style={styles.errorText}>{errors.confirmPassword}</RNText>}
                   </View>
 
@@ -404,30 +383,19 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
     borderRadius: 12,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#E5E7EB',
     paddingHorizontal: 14,
+    paddingVertical: 0,
     height: isSmallScreen ? 48 : 52,
-  },
-  inputError: {
-    borderColor: '#EF4444',
-    backgroundColor: '#FEF2F2',
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
     fontSize: isSmallScreen ? 14 : 15,
     color: '#1F2937',
     fontWeight: '400',
   },
-  eyeIcon: {
-    padding: 4,
+  inputError: {
+    borderColor: '#EF4444',
   },
   errorText: {
     color: '#EF4444',

@@ -1,5 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     Alert,
     ImageBackground,
@@ -12,12 +12,15 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { API_BASE_URL } from '../../src/config/constants';
+import { storageService } from '../../src/services/storageService';
 
 interface User {
-  id: string;
+  id: string | number;
   fullName: string;
   email: string;
-  phone: string;
+  username?: string;
+  phone?: string;
   role: 'admin' | 'doctor' | 'patient' | 'pharmacist' | 'lab_technician';
   status: 'active' | 'inactive' | 'pending';
   createdAt: string;
@@ -26,9 +29,10 @@ interface User {
 
 interface AdminUserManagementProps {
   onAddUser?: () => void;
+  onUsersChanged?: () => void;
 }
 
-export default function AdminUserManagement({ onAddUser }: AdminUserManagementProps) {
+export default function AdminUserManagement({ onAddUser, onUsersChanged }: AdminUserManagementProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -36,101 +40,94 @@ export default function AdminUserManagement({ onAddUser }: AdminUserManagementPr
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [loadUsersError, setLoadUsersError] = useState<string | null>(null);
   
   // Form state
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
+    username: '',
     phone: '',
     role: 'patient' as User['role'],
     specialization: '',
     password: '',
   });
 
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: '1',
-      fullName: 'Dr. Sarah Johnson',
-      email: 'sarah.johnson@medivault.com',
-      phone: '+1 234-567-8901',
-      role: 'doctor',
-      status: 'active',
-      createdAt: '2024-01-15',
-      specialization: 'Cardiologist'
-    },
-    {
-      id: '2',
-      fullName: 'John Smith',
-      email: 'john.smith@email.com',
-      phone: '+1 234-567-8902',
-      role: 'patient',
-      status: 'active',
-      createdAt: '2024-02-20'
-    },
-    {
-      id: '3',
-      fullName: 'Dr. Michael Chen',
-      email: 'michael.chen@medivault.com',
-      phone: '+1 234-567-8903',
-      role: 'doctor',
-      status: 'active',
-      createdAt: '2024-01-10',
-      specialization: 'Neurologist'
-    },
-    {
-      id: '4',
-      fullName: 'Emily Wilson',
-      email: 'emily.wilson@email.com',
-      phone: '+1 234-567-8904',
-      role: 'patient',
-      status: 'inactive',
-      createdAt: '2024-03-05'
-    },
-    {
-      id: '5',
-      fullName: 'Robert Brown',
-      email: 'robert.brown@medivault.com',
-      phone: '+1 234-567-8905',
-      role: 'pharmacist',
-      status: 'active',
-      createdAt: '2024-02-01'
-    },
-    {
-      id: '6',
-      fullName: 'Dr. Lisa Anderson',
-      email: 'lisa.anderson@medivault.com',
-      phone: '+1 234-567-8906',
-      role: 'doctor',
-      status: 'pending',
-      createdAt: '2024-11-28',
-      specialization: 'Pediatrician'
-    },
-    {
-      id: '7',
-      fullName: 'David Martinez',
-      email: 'david.martinez@medivault.com',
-      phone: '+1 234-567-8907',
-      role: 'lab_technician',
-      status: 'active',
-      createdAt: '2024-01-20'
-    },
-    {
-      id: '8',
-      fullName: 'Admin User',
-      email: 'admin@medivault.com',
-      phone: '+1 234-567-8900',
-      role: 'admin',
-      status: 'active',
-      createdAt: '2024-01-01'
+  const [users, setUsers] = useState<User[]>([]);
+
+  const showMessage = (title: string, message: string) => {
+    if (Platform.OS === 'web' && typeof (globalThis as any).alert === 'function') {
+      (globalThis as any).alert(`${title}\n\n${message}`);
+      return;
     }
-  ]);
+    Alert.alert(title, message);
+  };
+
+  const fetchUsers = useCallback(async () => {
+    setIsLoadingUsers(true);
+    setLoadUsersError(null);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/users`, {
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      const rawText = await res.text();
+      const json = (() => {
+        try {
+          return rawText ? JSON.parse(rawText) : null;
+        } catch {
+          return null;
+        }
+      })();
+
+      if (!res.ok || !json?.success) {
+        const message = json?.message || `HTTP ${res.status} while loading users`;
+        throw new Error(message);
+      }
+
+      const mapped: User[] = (Array.isArray(json.data) ? json.data : []).map((u: any) => {
+        const isActive = Boolean(u?.isActive);
+        const createdAtRaw = u?.createdAt;
+        const createdAt = createdAtRaw
+          ? new Date(createdAtRaw).toISOString().split('T')[0]
+          : '';
+
+        return {
+          id: u?.id,
+          fullName: String(u?.fullName || '').trim(),
+          email: String(u?.email || '').trim(),
+          username: String(u?.username || '').trim(),
+          phone: '',
+          role: u?.role,
+          status: isActive ? 'active' : 'inactive',
+          createdAt,
+        } as User;
+      });
+
+      setUsers(mapped);
+      onUsersChanged?.();
+    } catch (error: any) {
+      setLoadUsersError(String(error?.message || error));
+      setUsers([]);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  }, [onUsersChanged]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       searchQuery === '' ||
       user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.phone.includes(searchQuery);
+      (user.username || '').toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesRole = filterRole === 'all' || user.role === filterRole;
     const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
@@ -173,6 +170,7 @@ export default function AdminUserManagement({ onAddUser }: AdminUserManagementPr
     setFormData({
       fullName: '',
       email: '',
+      username: '',
       phone: '',
       role: 'patient',
       specialization: '',
@@ -180,73 +178,165 @@ export default function AdminUserManagement({ onAddUser }: AdminUserManagementPr
     });
   };
 
-  const handleAddUser = () => {
-    if (!formData.fullName || !formData.email || !formData.phone || !formData.password) {
+  const handleAddUser = async () => {
+    if (!formData.fullName || !formData.email || !formData.username || !formData.password) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    const newUser: User = {
-      id: (users.length + 1).toString(),
-      fullName: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
-      role: formData.role,
-      status: 'active',
-      createdAt: new Date().toISOString().split('T')[0],
-      ...(formData.specialization && { specialization: formData.specialization })
-    };
+    try {
+      const res = await fetch(`${API_BASE_URL}/users/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          email: formData.email,
+          username: formData.username,
+          password: formData.password,
+          role: formData.role,
+          phone: formData.phone,
+          ...(formData.specialization && { specialization: formData.specialization }),
+        }),
+      });
 
-    setUsers([...users, newUser]);
-    setShowAddModal(false);
-    resetForm();
-    Alert.alert('Success', 'User added successfully');
+      const rawText = await res.text();
+      const json = (() => {
+        try {
+          return rawText ? JSON.parse(rawText) : null;
+        } catch {
+          return null;
+        }
+      })();
+
+      if (!res.ok || !json?.success) {
+        const message = json?.message || `HTTP ${res.status} while creating user`;
+        throw new Error(message);
+      }
+
+      await fetchUsers();
+      onUsersChanged?.();
+      setShowAddModal(false);
+      resetForm();
+      Alert.alert('Success', 'User created successfully! Notifications sent.');
+    } catch (error: any) {
+      console.error('Error adding user:', error);
+      Alert.alert('Error', error?.message || 'Failed to create user');
+    }
   };
 
   const handleEditUser = () => {
     if (!selectedUser) return;
 
-    if (!formData.fullName || !formData.email || !formData.phone) {
+    if (!formData.fullName || !formData.email || !formData.username) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    const updatedUsers = users.map(user => 
-      user.id === selectedUser.id 
-        ? {
-            ...user,
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/users/${selectedUser.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
             fullName: formData.fullName,
             email: formData.email,
-            phone: formData.phone,
+            username: formData.username,
             role: formData.role,
-            ...(formData.specialization && { specialization: formData.specialization })
-          }
-        : user
-    );
+          }),
+        });
 
-    setUsers(updatedUsers);
-    setShowEditModal(false);
-    setSelectedUser(null);
-    resetForm();
-    Alert.alert('Success', 'User updated successfully');
+        const rawText = await res.text();
+        const json = (() => {
+          try {
+            return rawText ? JSON.parse(rawText) : null;
+          } catch {
+            return null;
+          }
+        })();
+
+        if (!res.ok || !json?.success) {
+          const message = json?.message || `HTTP ${res.status} while updating user`;
+          throw new Error(message);
+        }
+
+        await fetchUsers();
+        setShowEditModal(false);
+        setSelectedUser(null);
+        resetForm();
+        Alert.alert('Success', 'User updated successfully');
+      } catch (error: any) {
+        Alert.alert('Error', String(error?.message || error));
+      }
+    })();
   };
 
   const handleDeleteUser = (user: User) => {
-    Alert.alert(
-      'Delete User',
-      `Are you sure you want to delete ${user.fullName}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            setUsers(users.filter(u => u.id !== user.id));
-            Alert.alert('Success', 'User deleted successfully');
-          }
+    const doDelete = async () => {
+      try {
+        const id = encodeURIComponent(String(user.id));
+        // Best-effort auth header (backend may require it)
+        let token: string | null = null;
+        try {
+          token = await storageService.getToken();
+        } catch {
+          token = null;
         }
-      ]
-    );
+
+        const res = await fetch(`${API_BASE_URL}/users/${id}`, {
+          method: 'DELETE',
+          headers: {
+            Accept: 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : null),
+          },
+        });
+
+        const rawText = await res.text();
+        const json = (() => {
+          try {
+            return rawText ? JSON.parse(rawText) : null;
+          } catch {
+            return null;
+          }
+        })();
+
+        if (!res.ok || !json?.success) {
+          const message = json?.message || `HTTP ${res.status} while deleting user`;
+          const detail = json?.error ? `\n\n${json.error}` : '';
+          throw new Error(`${message}${detail}`);
+        }
+
+        // Update UI immediately (avoids needing to re-fetch and avoids scroll jumps)
+        setUsers((prev) => prev.filter((u) => String(u.id) !== String(user.id)));
+        onUsersChanged?.();
+        showMessage('Success', 'User deleted successfully');
+
+        // Background sync (ignore errors)
+        void fetchUsers();
+      } catch (error: any) {
+        showMessage('Error', String(error?.message || error));
+      }
+    };
+
+    const confirmMessage = `Are you sure you want to delete ${user.fullName}?`;
+
+    if (Platform.OS === 'web') {
+      const ok = typeof (globalThis as any).confirm === 'function'
+        ? (globalThis as any).confirm(confirmMessage)
+        : true;
+      if (ok) void doDelete();
+      return;
+    }
+
+    Alert.alert('Delete User', confirmMessage, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => void doDelete() },
+    ]);
   };
 
   const openEditModal = (user: User) => {
@@ -254,6 +344,7 @@ export default function AdminUserManagement({ onAddUser }: AdminUserManagementPr
     setFormData({
       fullName: user.fullName,
       email: user.email,
+      username: user.username || '',
       phone: user.phone,
       role: user.role,
       specialization: user.specialization || '',
@@ -263,12 +354,52 @@ export default function AdminUserManagement({ onAddUser }: AdminUserManagementPr
   };
 
   const toggleUserStatus = (user: User) => {
-    const newStatus: User['status'] = user.status === 'active' ? 'inactive' : 'active';
-    const updatedUsers = users.map(u => 
-      u.id === user.id ? { ...u, status: newStatus } : u
+    const nextIsActive = user.status !== 'active';
+    const actionText = nextIsActive ? 'Activate' : 'Deactivate';
+
+    Alert.alert(
+      `${actionText} User`,
+      `Are you sure you want to ${actionText.toLowerCase()} ${user.fullName}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: actionText,
+          onPress: async () => {
+            try {
+              const res = await fetch(`${API_BASE_URL}/users/${user.id}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Accept: 'application/json',
+                },
+                body: JSON.stringify({
+                  isActive: nextIsActive,
+                }),
+              });
+
+              const rawText = await res.text();
+              const json = (() => {
+                try {
+                  return rawText ? JSON.parse(rawText) : null;
+                } catch {
+                  return null;
+                }
+              })();
+
+              if (!res.ok || !json?.success) {
+                const message = json?.message || `HTTP ${res.status} while updating user`;
+                throw new Error(message);
+              }
+
+              await fetchUsers();
+              Alert.alert('Success', `User ${nextIsActive ? 'activated' : 'deactivated'} successfully`);
+            } catch (error: any) {
+              Alert.alert('Error', String(error?.message || error));
+            }
+          },
+        },
+      ]
     );
-    setUsers(updatedUsers);
-    Alert.alert('Success', `User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
   };
 
   const renderUserModal = (isEdit: boolean) => (
@@ -299,49 +430,40 @@ export default function AdminUserManagement({ onAddUser }: AdminUserManagementPr
             {/* Full Name */}
             <View style={styles.inputGroup}>
               <RNText style={styles.inputLabel}>Full Name *</RNText>
-              <View style={styles.inputContainer}>
-                <Ionicons name="person-outline" size={20} color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter full name"
-                  placeholderTextColor="#9CA3AF"
-                  value={formData.fullName}
-                  onChangeText={(text) => setFormData({ ...formData, fullName: text })}
-                />
-              </View>
+              <TextInput
+                style={styles.inputContainer}
+                placeholder="Enter full name"
+                placeholderTextColor="#9CA3AF"
+                value={formData.fullName}
+                onChangeText={(text) => setFormData({ ...formData, fullName: text })}
+              />
             </View>
 
             {/* Email */}
             <View style={styles.inputGroup}>
               <RNText style={styles.inputLabel}>Email *</RNText>
-              <View style={styles.inputContainer}>
-                <Ionicons name="mail-outline" size={20} color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter email address"
-                  placeholderTextColor="#9CA3AF"
-                  value={formData.email}
-                  onChangeText={(text) => setFormData({ ...formData, email: text })}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
+              <TextInput
+                style={styles.inputContainer}
+                placeholder="Enter email address"
+                placeholderTextColor="#9CA3AF"
+                value={formData.email}
+                onChangeText={(text) => setFormData({ ...formData, email: text })}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
             </View>
 
-            {/* Phone */}
+            {/* Username */}
             <View style={styles.inputGroup}>
-              <RNText style={styles.inputLabel}>Phone Number *</RNText>
-              <View style={styles.inputContainer}>
-                <Ionicons name="call-outline" size={20} color="#6B7280" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter phone number"
-                  placeholderTextColor="#9CA3AF"
-                  value={formData.phone}
-                  onChangeText={(text) => setFormData({ ...formData, phone: text })}
-                  keyboardType="phone-pad"
-                />
-              </View>
+              <RNText style={styles.inputLabel}>Username *</RNText>
+              <TextInput
+                style={styles.inputContainer}
+                placeholder="Enter username"
+                placeholderTextColor="#9CA3AF"
+                value={formData.username}
+                onChangeText={(text) => setFormData({ ...formData, username: text })}
+                autoCapitalize="none"
+              />
             </View>
 
             {/* Role */}
@@ -365,16 +487,13 @@ export default function AdminUserManagement({ onAddUser }: AdminUserManagementPr
             {formData.role === 'doctor' && (
               <View style={styles.inputGroup}>
                 <RNText style={styles.inputLabel}>Specialization</RNText>
-                <View style={styles.inputContainer}>
-                  <MaterialCommunityIcons name="stethoscope" size={20} color="#6B7280" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter specialization"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.specialization}
-                    onChangeText={(text) => setFormData({ ...formData, specialization: text })}
-                  />
-                </View>
+                <TextInput
+                  style={styles.inputContainer}
+                  placeholder="Enter specialization"
+                  placeholderTextColor="#9CA3AF"
+                  value={formData.specialization}
+                  onChangeText={(text) => setFormData({ ...formData, specialization: text })}
+                />
               </View>
             )}
 
@@ -382,17 +501,14 @@ export default function AdminUserManagement({ onAddUser }: AdminUserManagementPr
             {!isEdit && (
               <View style={styles.inputGroup}>
                 <RNText style={styles.inputLabel}>Password *</RNText>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#6B7280" />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter password"
-                    placeholderTextColor="#9CA3AF"
-                    value={formData.password}
-                    onChangeText={(text) => setFormData({ ...formData, password: text })}
-                    secureTextEntry
-                  />
-                </View>
+                <TextInput
+                  style={styles.inputContainer}
+                  placeholder="Enter password"
+                  placeholderTextColor="#9CA3AF"
+                  value={formData.password}
+                  onChangeText={(text) => setFormData({ ...formData, password: text })}
+                  secureTextEntry
+                />
               </View>
             )}
           </ScrollView>
@@ -443,7 +559,7 @@ export default function AdminUserManagement({ onAddUser }: AdminUserManagementPr
           <Ionicons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by name, email, or phone..."
+            placeholder="Search by name, email, or username..."
             placeholderTextColor="#9CA3AF"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -578,8 +694,8 @@ export default function AdminUserManagement({ onAddUser }: AdminUserManagementPr
                   <RNText style={styles.infoText}>{user.email}</RNText>
                 </View>
                 <View style={styles.infoRow}>
-                  <Ionicons name="call-outline" size={14} color="#6B7280" />
-                  <RNText style={styles.infoText}>{user.phone}</RNText>
+                  <Ionicons name="person-outline" size={14} color="#6B7280" />
+                  <RNText style={styles.infoText}>@{user.username || ''}</RNText>
                 </View>
                 <View style={styles.infoRow}>
                   <Ionicons name="calendar-outline" size={14} color="#6B7280" />
@@ -1004,20 +1120,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
     paddingHorizontal: 12,
+    paddingVertical: 0,
     height: 48,
-    gap: 8,
-  },
-  input: {
-    flex: 1,
     fontSize: 14,
     color: '#1F2937',
+    fontWeight: '400',
   },
   pickerContainer: {
     flex: 1,

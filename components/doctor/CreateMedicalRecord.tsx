@@ -1,6 +1,8 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   ImageBackground,
@@ -48,6 +50,14 @@ interface CurrentVisit {
   diagnosis: string;
   treatment: string;
   notes: string;
+}
+
+interface UploadedDocument {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  uri: string;
 }
 
 const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
@@ -102,6 +112,8 @@ export default function CreateMedicalRecord() {
   });
 
   const [showCommonDiagnoses, setShowCommonDiagnoses] = useState(false);
+  const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Calculate BMI when weight or height changes
   const calculateBMI = (weight: string, height: string) => {
@@ -124,6 +136,76 @@ export default function CreateMedicalRecord() {
     } else {
       setCurrentVisit({ ...currentVisit, diagnosis });
     }
+  };
+
+  const handleDocumentPicker = async () => {
+    try {
+      setIsUploading(true);
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/*', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+
+      if (result.canceled === false && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        
+        // Check file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size && file.size > maxSize) {
+          Alert.alert('File Too Large', 'Please select a file smaller than 10MB');
+          return;
+        }
+
+        const newDocument: UploadedDocument = {
+          id: Date.now().toString(),
+          name: file.name,
+          size: file.size || 0,
+          type: file.mimeType || 'unknown',
+          uri: file.uri,
+        };
+
+        setUploadedDocuments([...uploadedDocuments, newDocument]);
+        Alert.alert('Success', `${file.name} uploaded successfully`);
+      }
+    } catch (error) {
+      console.error('Document picker error:', error);
+      Alert.alert('Error', 'Failed to upload document. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeDocument = (documentId: string) => {
+    Alert.alert(
+      'Remove Document',
+      'Are you sure you want to remove this document?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            setUploadedDocuments(uploadedDocuments.filter(doc => doc.id !== documentId));
+          },
+        },
+      ]
+    );
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (type: string): 'file-pdf-box' | 'file-image' | 'file-document' | 'file' => {
+    if (type.includes('pdf')) return 'file-pdf-box';
+    if (type.includes('image')) return 'file-image';
+    if (type.includes('word') || type.includes('document')) return 'file-document';
+    return 'file';
   };
 
   const validateForm = () => {
@@ -193,6 +275,7 @@ export default function CreateMedicalRecord() {
               treatment: '',
               notes: '',
             });
+            setUploadedDocuments([]);
           },
         },
         { text: 'Done' },
@@ -597,6 +680,67 @@ export default function CreateMedicalRecord() {
           </View>
         </View>
 
+        {/* Medical Documents */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Medical Documents</Text>
+            <TouchableOpacity
+              style={styles.uploadButton}
+              onPress={handleDocumentPicker}
+              disabled={isUploading}
+            >
+              {isUploading ? (
+                <ActivityIndicator size="small" color="#1E4BA3" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="upload" size={20} color="#1E4BA3" />
+                  <Text style={styles.uploadButtonText}>Upload</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.sectionDescription}>
+            Upload lab reports, X-rays, prescriptions, or other medical documents (PDF, Images, Word - Max 10MB)
+          </Text>
+
+          {uploadedDocuments.length > 0 ? (
+            <View style={styles.documentsContainer}>
+              {uploadedDocuments.map((doc) => (
+                <View key={doc.id} style={styles.documentCard}>
+                  <View style={styles.documentIconContainer}>
+                    <MaterialCommunityIcons
+                      name={getFileIcon(doc.type)}
+                      size={32}
+                      color="#1E4BA3"
+                    />
+                  </View>
+                  <View style={styles.documentInfo}>
+                    <Text style={styles.documentName} numberOfLines={1}>
+                      {doc.name}
+                    </Text>
+                    <Text style={styles.documentSize}>{formatFileSize(doc.size)}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.removeDocButton}
+                    onPress={() => removeDocument(doc.id)}
+                  >
+                    <Ionicons name="close-circle" size={24} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyDocuments}>
+              <MaterialCommunityIcons name="file-upload-outline" size={48} color="#D1D5DB" />
+              <Text style={styles.emptyDocumentsText}>No documents uploaded yet</Text>
+              <Text style={styles.emptyDocumentsSubtext}>
+                Tap the upload button to add medical documents
+              </Text>
+            </View>
+          )}
+        </View>
+
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.saveButton} onPress={handleSaveMedicalRecord}>
@@ -863,6 +1007,92 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#374151',
     lineHeight: 18,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionDescription: {
+    fontSize: 12,
+    color: '#6B7280',
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F0F9FF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#1E4BA3',
+  },
+  uploadButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1E4BA3',
+  },
+  documentsContainer: {
+    gap: 12,
+  },
+  documentCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 12,
+  },
+  documentIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  documentInfo: {
+    flex: 1,
+  },
+  documentName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  documentSize: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  removeDocButton: {
+    padding: 4,
+  },
+  emptyDocuments: {
+    alignItems: 'center',
+    padding: 32,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#E5E7EB',
+  },
+  emptyDocumentsText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginTop: 12,
+  },
+  emptyDocumentsSubtext: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 4,
+    textAlign: 'center',
   },
 });
 

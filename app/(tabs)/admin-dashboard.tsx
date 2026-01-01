@@ -3,17 +3,18 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  ImageBackground,
-  Platform,
-  RefreshControl,
-  Text as RNText,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    ImageBackground,
+    Modal,
+    Platform,
+    RefreshControl,
+    Text as RNText,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import AdminAddUser from '../../components/admin/AdminAddUser';
 import AdminAppointments from '../../components/admin/AdminAppointments';
@@ -24,6 +25,7 @@ import AdminPatients from '../../components/admin/AdminPatients';
 import AdminReports from '../../components/admin/AdminReports';
 import AdminSettings from '../../components/admin/AdminSettings';
 import AdminUserManagement from '../../components/admin/AdminUserManagement';
+import { API_BASE_URL } from '../../src/config/constants';
 import { sessionService } from '../../src/services/sessionService';
 import { storageService } from '../../src/services/storageService';
 // Animation imports removed - dashboard cards don't need animations for better performance
@@ -36,6 +38,8 @@ interface DashboardStats {
   totalUsers: number;
   totalDoctors: number;
   totalPatients: number;
+  totalPharmacists: number;
+  totalLabTechnicians: number;
   activeSessions: number;
   pendingApprovals: number;
 }
@@ -55,10 +59,14 @@ export default function AdminDashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [adminUser, setAdminUser] = useState<any>(null);
   const [activeNav, setActiveNav] = useState<string>('dashboard');
+  const [returnNavAfterAddUser, setReturnNavAfterAddUser] = useState<string>('dashboard');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
-    totalUsers: 10547,
-    totalDoctors: 523,
-    totalPatients: 9824,
+    totalUsers: 0,
+    totalDoctors: 0,
+    totalPatients: 0,
+    totalPharmacists: 0,
+    totalLabTechnicians: 0,
     activeSessions: 342,
     pendingApprovals: 15
   });
@@ -95,7 +103,57 @@ export default function AdminDashboardScreen() {
 
   useEffect(() => {
     loadAdminData();
+    refreshUserStats();
   }, []);
+
+  const normalizeRole = (roleRaw: unknown) =>
+    String(roleRaw ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/-+/g, '_');
+
+  const refreshUserStats = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/users`, {
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      const rawText = await res.text();
+      const json = (() => {
+        try {
+          return rawText ? JSON.parse(rawText) : null;
+        } catch {
+          return null;
+        }
+      })();
+
+      if (!res.ok || !json?.success) {
+        return;
+      }
+
+      const list = Array.isArray(json.data) ? json.data : [];
+      const totalUsers = list.length;
+      const totalDoctors = list.filter((u: any) => normalizeRole(u?.role) === 'doctor').length;
+      const totalPatients = list.filter((u: any) => normalizeRole(u?.role) === 'patient').length;
+      const totalPharmacists = list.filter((u: any) => normalizeRole(u?.role) === 'pharmacist').length;
+      const totalLabTechnicians = list.filter((u: any) => normalizeRole(u?.role) === 'lab_technician').length;
+
+      setStats((prev) => ({
+        ...prev,
+        totalUsers,
+        totalDoctors,
+        totalPatients,
+        totalPharmacists,
+        totalLabTechnicians,
+      }));
+    } catch (error) {
+      // best-effort; keep previous stats
+      console.log('Failed to refresh user stats:', error);
+    }
+  };
 
   const loadAdminData = async () => {
     try {
@@ -110,7 +168,7 @@ export default function AdminDashboardScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadAdminData();
+    await Promise.all([loadAdminData(), refreshUserStats()]);
     setRefreshing(false);
   };
 
@@ -146,159 +204,165 @@ export default function AdminDashboardScreen() {
       >
         <View style={styles.gradientOverlay} />
 
-        {/* Header - Animation removed for performance */}
+        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity 
               style={styles.backButton} 
-              onPress={async () => {
-                await sessionService.clearSession();
-                router.replace('/(auth)/login' as any);
-              }}
+              onPress={() => setMenuOpen(true)}
             >
-              <Ionicons name="arrow-back" size={24} color="#fff" />
+              <Ionicons name="menu" size={28} color="#fff" />
             </TouchableOpacity>
             <View>
               <RNText style={styles.greeting}>Welcome Back, Admin</RNText>
               <RNText style={styles.userName}>{adminUser?.fullName || 'Administrator'}</RNText>
             </View>
           </View>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={24} color="#fff" />
+          <TouchableOpacity style={styles.profileButton}>
+            <Ionicons name="person-circle-outline" size={32} color="#fff" />
           </TouchableOpacity>
         </View>
 
-        {/* Navigation Bar */}
-        <View style={styles.navContainer}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.navScrollContent}
-          >
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'dashboard' && styles.navItemActive]}
-              onPress={() => setActiveNav('dashboard')}
-            >
-              <MaterialCommunityIcons 
-                name="view-dashboard" 
-                size={20} 
-                color={activeNav === 'dashboard' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'dashboard' && styles.navTextActive]}>Dashboard</RNText>
-            </TouchableOpacity>
+        {/* Hamburger Menu Modal */}
+        <Modal
+          visible={menuOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setMenuOpen(false)}
+        >
+          <View style={styles.menuOverlay}>
+            {/* Menu Sidebar */}
+            <View style={styles.menuContainer}>
+              {/* Menu Header */}
+              <View style={styles.menuHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 }}>
+                  <RNText style={styles.menuTitle}>Medi Vault</RNText>
+                  <TouchableOpacity onPress={() => setMenuOpen(false)}>
+                    <Ionicons name="close" size={28} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              </View>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'messages' && styles.navItemActive]}
-              onPress={() => setActiveNav('messages')}
-            >
-              <Ionicons 
-                name="chatbubbles-outline" 
-                size={20} 
-                color={activeNav === 'messages' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'messages' && styles.navTextActive]}>Messages</RNText>
-            </TouchableOpacity>
+              {/* Menu Items */}
+              <ScrollView style={styles.menuContent}>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'dashboard' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('dashboard'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="view-dashboard" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Dashboard</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'notifications' && styles.navItemActive]}
-              onPress={() => setActiveNav('notifications')}
-            >
-              <Ionicons 
-                name="notifications-outline" 
-                size={20} 
-                color={activeNav === 'notifications' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'notifications' && styles.navTextActive]}>Notifications</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'users' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('users'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="account-cog" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>User Management</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'users' && styles.navItemActive]}
-              onPress={() => setActiveNav('users')}
-            >
-              <MaterialCommunityIcons 
-                name="account-cog" 
-                size={20} 
-                color={activeNav === 'users' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'users' && styles.navTextActive]}>User Management</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'patients' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('patients'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="account-heart" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Patients</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'patients' && styles.navItemActive]}
-              onPress={() => setActiveNav('patients')}
-            >
-              <MaterialCommunityIcons 
-                name="account-heart" 
-                size={20} 
-                color={activeNav === 'patients' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'patients' && styles.navTextActive]}>Patients</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'doctors' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('doctors'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="doctor" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Doctors</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'doctors' && styles.navItemActive]}
-              onPress={() => setActiveNav('doctors')}
-            >
-              <MaterialCommunityIcons 
-                name="doctor" 
-                size={20} 
-                color={activeNav === 'doctors' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'doctors' && styles.navTextActive]}>Doctors</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'appointments' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('appointments'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="calendar-clock" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Appointments</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'appointments' && styles.navItemActive]}
-              onPress={() => setActiveNav('appointments')}
-            >
-              <MaterialCommunityIcons 
-                name="calendar-clock" 
-                size={20} 
-                color={activeNav === 'appointments' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'appointments' && styles.navTextActive]}>Appointments</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'messages' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('messages'); setMenuOpen(false); }}
+                >
+                  <Ionicons name="chatbubbles-outline" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Messages</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'reports' && styles.navItemActive]}
-              onPress={() => setActiveNav('reports')}
-            >
-              <MaterialCommunityIcons 
-                name="file-chart" 
-                size={20} 
-                color={activeNav === 'reports' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'reports' && styles.navTextActive]}>Reports</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'notifications' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('notifications'); setMenuOpen(false); }}
+                >
+                  <Ionicons name="notifications-outline" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Notifications</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'settings' && styles.navItemActive]}
-              onPress={() => setActiveNav('settings')}
-            >
-              <Ionicons 
-                name="settings-outline" 
-                size={20} 
-                color={activeNav === 'settings' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'settings' && styles.navTextActive]}>System Settings</RNText>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'reports' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('reports'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="file-chart" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Reports</RNText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'settings' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('settings'); setMenuOpen(false); }}
+                >
+                  <Ionicons name="settings-outline" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>System Settings</RNText>
+                </TouchableOpacity>
+
+                <View style={styles.menuDivider} />
+
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={async () => {
+                    setMenuOpen(false);
+                    await sessionService.clearSession();
+                    router.replace('/(auth)/login' as any);
+                  }}
+                >
+                  <Ionicons name="log-out-outline" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Back to Login</RNText>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+
+            {/* Backdrop */}
+            <TouchableOpacity
+              style={styles.menuBackdrop}
+              activeOpacity={1}
+              onPress={() => setMenuOpen(false)}
+            />
+          </View>
+        </Modal>
 
         {activeNav === 'add-user' ? (
           <AdminAddUser 
-            onBack={() => setActiveNav('dashboard')}
+            onBack={() => setActiveNav(returnNavAfterAddUser)}
             onUserAdded={(user: any) => {
               console.log('New user added:', user);
-              setActiveNav('dashboard');
+              void refreshUserStats();
+              setActiveNav(returnNavAfterAddUser);
             }}
           />
         ) : activeNav === 'messages' ? (
-          <AdminMessages />
+          <AdminMessages/>
         ) : activeNav === 'notifications' ? (
           <AdminNotifications />
         ) : activeNav === 'users' ? (
-          <AdminUserManagement onAddUser={() => setActiveNav('add-user')} />
+          <AdminUserManagement
+            onAddUser={() => {
+              setReturnNavAfterAddUser('users');
+              setActiveNav('add-user');
+            }}
+            onUsersChanged={() => void refreshUserStats()}
+          />
         ) : activeNav === 'patients' ? (
           <AdminPatients />
         ) : activeNav === 'doctors' ? (
@@ -343,6 +407,22 @@ export default function AdminDashboardScreen() {
                 <RNText style={styles.statValue}>{stats.totalPatients.toLocaleString()}</RNText>
                 <RNText style={styles.statLabel}>Patients</RNText>
               </View>
+
+              <View style={styles.statCard}>
+                <View style={[styles.statIconContainer, { backgroundColor: '#8B5CF615' }]}>
+                  <MaterialCommunityIcons name="pill" size={28} color="#8B5CF6" />
+                </View>
+                <RNText style={styles.statValue}>{stats.totalPharmacists.toLocaleString()}</RNText>
+                <RNText style={styles.statLabel}>Pharmacists</RNText>
+              </View>
+
+              <View style={styles.statCard}>
+                <View style={[styles.statIconContainer, { backgroundColor: '#F59E0B15' }]}>
+                  <MaterialCommunityIcons name="flask" size={28} color="#F59E0B" />
+                </View>
+                <RNText style={styles.statValue}>{stats.totalLabTechnicians.toLocaleString()}</RNText>
+                <RNText style={styles.statLabel}>Lab Technicians</RNText>
+              </View>
             </View>
           </View>
 
@@ -372,7 +452,10 @@ export default function AdminDashboardScreen() {
             <View style={styles.actionsGrid}>
               <TouchableOpacity 
                 style={styles.actionCard}
-                onPress={() => setActiveNav('add-user')}
+                onPress={() => {
+                  setReturnNavAfterAddUser('users');
+                  setActiveNav('add-user');
+                }}
               >
                 <MaterialCommunityIcons name="account-plus" size={32} color="#3B82F6" />
                 <RNText style={styles.actionText}>Add User</RNText>
@@ -421,6 +504,65 @@ export default function AdminDashboardScreen() {
           </View>
         </ScrollView>
         )}
+
+        {/* Bottom Navigation Bar */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveNav('dashboard')}
+          >
+            <Ionicons
+              name={activeNav === 'dashboard' ? 'home' : 'home-outline'}
+              size={24}
+              color={activeNav === 'dashboard' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeNav === 'dashboard' && styles.bottomNavTextActive]}>
+              Home
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveNav('users')}
+          >
+            <MaterialCommunityIcons
+              name={activeNav === 'users' ? 'account-group' : 'account-group-outline'}
+              size={24}
+              color={activeNav === 'users' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeNav === 'users' && styles.bottomNavTextActive]}>
+              Users
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveNav('appointments')}
+          >
+            <MaterialCommunityIcons
+              name={activeNav === 'appointments' ? 'calendar-check' : 'calendar-check-outline'}
+              size={24}
+              color={activeNav === 'appointments' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeNav === 'appointments' && styles.bottomNavTextActive]}>
+              Appointments
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveNav('reports')}
+          >
+            <MaterialCommunityIcons
+              name={activeNav === 'reports' ? 'chart-bar' : 'chart-bar'}
+              size={24}
+              color={activeNav === 'reports' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeNav === 'reports' && styles.bottomNavTextActive]}>
+              Reports
+            </RNText>
+          </TouchableOpacity>
+        </View>
       </ImageBackground>
     </View>
   );
@@ -480,7 +622,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 4,
   },
-  logoutButton: {
+  profileButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -708,6 +850,100 @@ const styles = StyleSheet.create({
   activityTime: {
     fontSize: 12,
     color: '#6B7280',
+  },
+  menuOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  menuBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  menuContainer: {
+    width: 280,
+    backgroundColor: '#0F3460',
+    height: '100%',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        shadowOffset: { width: 2, height: 0 },
+      },
+      android: { elevation: 16 },
+    }),
+  },
+  menuHeader: {
+    backgroundColor: '#1E4BA3',
+    paddingTop: Platform.OS === 'android' ? 40 : 60,
+  },
+  menuTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  menuContent: {
+    flex: 1,
+    paddingTop: 16,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: 'transparent',
+  },
+  menuItemActive: {
+    backgroundColor: 'rgba(30, 75, 163, 0.3)',
+    borderLeftColor: '#fff',
+  },
+  menuItemText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#fff',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginVertical: 12,
+    marginHorizontal: 20,
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#1E4BA3',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
+    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+    paddingTop: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  bottomNavItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  bottomNavText: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  bottomNavTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
 });
 

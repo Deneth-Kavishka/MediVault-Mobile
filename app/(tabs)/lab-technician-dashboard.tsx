@@ -3,19 +3,19 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  ImageBackground,
-  Modal,
-  Platform,
-  RefreshControl,
-  Text as RNText,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    ImageBackground,
+    Modal,
+    Platform,
+    RefreshControl,
+    Text as RNText,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import Animated from 'react-native-reanimated';
 import AssignedTests from '../../components/lab-technician/AssignedTests';
@@ -60,7 +60,8 @@ export default function LabTechnicianDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [userInfo, setUserInfo] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'assigned' | 'completed' | 'history'>('overview');
-  const [activeNav, setActiveNav] = useState<'dashboard' | 'assigned-tests' | 'upload-results' | 'flag-abnormal' | 'notifications' | 'history' | 'appointments'>('dashboard');
+  const [activeNav, setActiveNav] = useState<'dashboard' | 'assigned-tests' | 'upload-results' | 'flag-abnormal' | 'notifications' | 'history' | 'appointments' | 'scan-qr' | 'inventory' | 'restock' | 'reports'>('dashboard');
+  const [menuOpen, setMenuOpen] = useState(false);
   
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,6 +78,16 @@ export default function LabTechnicianDashboard() {
   const [isAbnormal, setIsAbnormal] = useState(false);
   const [resultNotes, setResultNotes] = useState('');
   
+  // QR Scanner
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [scannedQRData, setScannedQRData] = useState<string>('');
+  
+  // Inventory Management
+  const [inventorySearch, setInventorySearch] = useState('');
+  const [showRestockModal, setShowRestockModal] = useState(false);
+  const [restockItem, setRestockItem] = useState<any>(null);
+  const [restockQuantity, setRestockQuantity] = useState('');
+  
   // Stats
   const [stats, setStats] = useState<DashboardStats>({
     assignedTests: 12,
@@ -84,6 +95,18 @@ export default function LabTechnicianDashboard() {
     completedToday: 8,
     abnormalResults: 3,
   });
+  
+  // Inventory Items
+  const [inventoryItems] = useState([
+    { id: '1', name: 'Blood Collection Tubes', quantity: 150, minStock: 100, expiryDate: '2025-12-31', category: 'Supplies' },
+    { id: '2', name: 'Urine Sample Containers', quantity: 75, minStock: 50, expiryDate: '2026-03-15', category: 'Supplies' },
+    { id: '3', name: 'Glucose Test Strips', quantity: 30, minStock: 50, expiryDate: '2025-06-30', category: 'Reagents' },
+    { id: '4', name: 'CBC Reagent Kit', quantity: 8, minStock: 10, expiryDate: '2025-08-20', category: 'Reagents' },
+    { id: '5', name: 'Microscope Slides', quantity: 200, minStock: 100, expiryDate: '2027-01-01', category: 'Supplies' },
+    { id: '6', name: 'Centrifuge Tubes', quantity: 45, minStock: 75, expiryDate: '2026-11-15', category: 'Supplies' },
+    { id: '7', name: 'Lipid Profile Reagent', quantity: 5, minStock: 15, expiryDate: '2025-05-10', category: 'Reagents' },
+    { id: '8', name: 'Alcohol Swabs', quantity: 500, minStock: 200, expiryDate: '2025-09-30', category: 'Supplies' },
+  ]);
 
   // Slow animations (600-1000ms)
   // ANIMATIONS REMOVED FOR BETTER PERFORMANCE
@@ -274,6 +297,88 @@ export default function LabTechnicianDashboard() {
     setSelectedTest(null);
   };
 
+  const handleScanQR = () => {
+    Alert.alert(
+      'QR Scanner',
+      'QR scanner would open camera to scan test order QR codes',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Simulate Scan',
+          onPress: () => {
+            const mockQRData = JSON.stringify({
+              testId: 'TEST-2025-001',
+              patientName: 'John Doe',
+              testName: 'Complete Blood Count',
+              orderedBy: 'Dr. Smith',
+              priority: 'urgent'
+            });
+            setScannedQRData(mockQRData);
+            Alert.alert('QR Scanned', 'Test order verified successfully!\n\n' + mockQRData);
+          }
+        }
+      ]
+    );
+  };
+  
+  const handleRequestRestock = (item: any) => {
+    setRestockItem(item);
+    setRestockQuantity('');
+    setShowRestockModal(true);
+  };
+  
+  const submitRestockRequest = () => {
+    if (!restockQuantity || parseInt(restockQuantity) <= 0) {
+      Alert.alert('Error', 'Please enter a valid quantity');
+      return;
+    }
+    
+    Alert.alert(
+      'Restock Request Submitted',
+      `Requested ${restockQuantity} units of ${restockItem.name}\n\nYou will be notified when the order is fulfilled.`,
+      [{ text: 'OK', onPress: () => setShowRestockModal(false) }]
+    );
+  };
+  
+  const checkExpiryStatus = (expiryDate: string) => {
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const daysUntilExpiry = Math.floor((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry < 0) return { status: 'expired', color: '#EF4444', days: daysUntilExpiry };
+    if (daysUntilExpiry < 30) return { status: 'expiring soon', color: '#F59E0B', days: daysUntilExpiry };
+    return { status: 'good', color: '#10B981', days: daysUntilExpiry };
+  };
+  
+  const sendLowStockAlert = (item: any) => {
+    Alert.alert(
+      'Low Stock Alert Sent',
+      `Alert sent to inventory manager for ${item.name}\n\nCurrent Stock: ${item.quantity}\nMinimum Stock: ${item.minStock}\n\nYou will be notified when restocked.`
+    );
+  };
+  
+  const generateLabReport = () => {
+    const reportData = {
+      totalTests: labTests.length,
+      completedTests: labTests.filter(t => t.status === 'completed').length,
+      abnormalResults: labTests.filter(t => t.isAbnormal).length,
+      averageCompletionTime: '2.5 hours',
+      mostCommonTest: 'Complete Blood Count',
+      period: 'Last 30 days'
+    };
+    
+    Alert.alert(
+      'Lab Statistics Report',
+      `Period: ${reportData.period}\n\n` +
+      `Total Tests: ${reportData.totalTests}\n` +
+      `Completed: ${reportData.completedTests}\n` +
+      `Abnormal Results: ${reportData.abnormalResults}\n` +
+      `Avg Completion: ${reportData.averageCompletionTime}\n` +
+      `Most Common: ${reportData.mostCommonTest}\n\n` +
+      `Report generated successfully!`
+    );
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'stat':
@@ -437,16 +542,13 @@ export default function LabTechnicianDashboard() {
     <View style={styles.section}>
       {/* Search & Filters */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#6B7280" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by patient name, NIC, or test..."
-            placeholderTextColor="#9CA3AF"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search by patient name, NIC, or test..."
+          placeholderTextColor="#9CA3AF"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
 
         {/* Status Filter */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
@@ -534,120 +636,161 @@ export default function LabTechnicianDashboard() {
       >
         <View style={styles.overlay} />
 
-        {/* Header - Animation removed for performance */}
+        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity
               style={styles.backButton}
-              onPress={async () => {
-                await sessionService.clearSession();
-                router.replace('/(auth)/login' as any);
-              }}
+              onPress={() => setMenuOpen(true)}
             >
-              <Ionicons name="arrow-back" size={24} color="#fff" />
+              <Ionicons name="menu" size={28} color="#fff" />
             </TouchableOpacity>
             <View>
               <RNText style={styles.greeting}>Welcome Back, Lab Technician</RNText>
               <RNText style={styles.userName}>{userInfo?.fullName || 'Lab Technician'}</RNText>
             </View>
           </View>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={24} color="#fff" />
+          <TouchableOpacity style={styles.profileButton}>
+            <Ionicons name="person-circle-outline" size={32} color="#fff" />
           </TouchableOpacity>
         </View>
 
-        {/* Navigation Bar */}
-        <View style={styles.navContainer}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.navScrollContent}
-          >
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'dashboard' && styles.navItemActive]}
-              onPress={() => setActiveNav('dashboard')}
-            >
-              <MaterialCommunityIcons 
-                name="view-dashboard" 
-                size={20} 
-                color={activeNav === 'dashboard' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'dashboard' && styles.navTextActive]}>Dashboard</RNText>
-            </TouchableOpacity>
+        {/* Hamburger Menu Modal */}
+        <Modal
+          visible={menuOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setMenuOpen(false)}
+        >
+          <View style={styles.menuOverlay}>
+            {/* Menu Sidebar */}
+            <View style={styles.menuContainer}>
+              {/* Menu Header */}
+              <View style={styles.menuHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 }}>
+                  <RNText style={styles.menuTitle}>Medi Vault</RNText>
+                  <TouchableOpacity onPress={() => setMenuOpen(false)}>
+                    <Ionicons name="close" size={28} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              </View>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'assigned-tests' && styles.navItemActive]}
-              onPress={() => setActiveNav('assigned-tests')}
-            >
-              <MaterialCommunityIcons 
-                name="clipboard-list" 
-                size={20} 
-                color={activeNav === 'assigned-tests' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'assigned-tests' && styles.navTextActive]}>Assigned Tests</RNText>
-            </TouchableOpacity>
+              {/* Menu Items */}
+              <ScrollView style={styles.menuContent}>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'dashboard' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('dashboard'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="view-dashboard" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Dashboard</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'upload-results' && styles.navItemActive]}
-              onPress={() => setActiveNav('upload-results')}
-            >
-              <MaterialCommunityIcons 
-                name="cloud-upload" 
-                size={20} 
-                color={activeNav === 'upload-results' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'upload-results' && styles.navTextActive]}>Upload Results</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'assigned-tests' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('assigned-tests'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="clipboard-list" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Assigned Tests</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'flag-abnormal' && styles.navItemActive]}
-              onPress={() => setActiveNav('flag-abnormal')}
-            >
-              <MaterialCommunityIcons 
-                name="alert-circle" 
-                size={20} 
-                color={activeNav === 'flag-abnormal' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'flag-abnormal' && styles.navTextActive]}>Abnormal Results</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'upload-results' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('upload-results'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="cloud-upload" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Upload Results</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'notifications' && styles.navItemActive]}
-              onPress={() => setActiveNav('notifications')}
-            >
-              <Ionicons 
-                name="notifications-outline" 
-                size={20} 
-                color={activeNav === 'notifications' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'notifications' && styles.navTextActive]}>Notifications</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'flag-abnormal' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('flag-abnormal'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="alert-circle" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Abnormal Results</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'history' && styles.navItemActive]}
-              onPress={() => setActiveNav('history')}
-            >
-              <MaterialCommunityIcons 
-                name="history" 
-                size={20} 
-                color={activeNav === 'history' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'history' && styles.navTextActive]}>Test History</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'notifications' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('notifications'); setMenuOpen(false); }}
+                >
+                  <Ionicons name="notifications-outline" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Notifications</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeNav === 'appointments' && styles.navItemActive]}
-              onPress={() => setActiveNav('appointments')}
-            >
-              <MaterialCommunityIcons 
-                name="calendar-check" 
-                size={20} 
-                color={activeNav === 'appointments' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeNav === 'appointments' && styles.navTextActive]}>Appointments</RNText>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'history' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('history'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="history" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Test History</RNText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'appointments' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('appointments'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="calendar-check" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Appointments</RNText>
+                </TouchableOpacity>
+
+                <View style={styles.menuDivider} />
+
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'scan-qr' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('dashboard'); setMenuOpen(false); handleScanQR(); }}
+                >
+                  <MaterialCommunityIcons name="qrcode-scan" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Scan Test Order QR</RNText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'inventory' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('inventory'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="archive" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Inventory & Supplies</RNText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'restock' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('restock'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="package-variant" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Restock Requests</RNText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'reports' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('reports'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="chart-bar" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Lab Reports</RNText>
+                </TouchableOpacity>
+
+                <View style={styles.menuDivider} />
+
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={async () => {
+                    setMenuOpen(false);
+                    await sessionService.clearSession();
+                    router.replace('/(auth)/login' as any);
+                  }}
+                >
+                  <Ionicons name="log-out-outline" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Back to Login</RNText>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+
+            {/* Backdrop */}
+            <TouchableOpacity
+              style={styles.menuBackdrop}
+              activeOpacity={1}
+              onPress={() => setMenuOpen(false)}
+            />
+          </View>
+        </Modal>
 
         {/* Content */}
         {activeNav === 'dashboard' && (
@@ -663,9 +806,280 @@ export default function LabTechnicianDashboard() {
         {activeNav === 'assigned-tests' && <AssignedTests />}
         {activeNav === 'upload-results' && <UploadResults />}
         {activeNav === 'flag-abnormal' && <FlagAbnormalResults />}
-        {activeNav === 'notifications' && <ManageNotifications />}
+        {activeNav === 'notifications' && <ManageNotifications showBackground={false} />}
         {activeNav === 'history' && <TestHistory />}
         {activeNav === 'appointments' && <AppointmentsView userRole="lab_technician" userId={userInfo?.id} />}
+        
+        {/* Inventory Management */}
+        {activeNav === 'inventory' && (
+          <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionTitleRow}>
+                  <MaterialCommunityIcons name="archive" size={28} color="#1E4BA3" />
+                  <RNText style={styles.sectionTitle}>Inventory & Supplies</RNText>
+                </View>
+              </View>
+              
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search supplies, reagents, equipment..."
+                placeholderTextColor="#9CA3AF"
+                value={inventorySearch}
+                onChangeText={setInventorySearch}
+              />
+              
+              {inventoryItems
+                .filter(item => item.name.toLowerCase().includes(inventorySearch.toLowerCase()))
+                .map((item) => {
+                  const expiry = checkExpiryStatus(item.expiryDate);
+                  const isLowStock = item.quantity < item.minStock;
+                  
+                  return (
+                    <View key={item.id} style={[styles.inventoryCard, isLowStock && styles.lowStockCard]}>
+                      <View style={styles.inventoryHeader}>
+                        <View style={styles.inventoryTitleRow}>
+                          <View style={styles.inventoryIconWrapper}>
+                            <MaterialCommunityIcons name="package-variant" size={24} color="#1E4BA3" />
+                          </View>
+                          <View style={styles.inventoryTitleText}>
+                            <RNText style={styles.inventoryName}>{item.name}</RNText>
+                            <RNText style={styles.inventoryCategory}>{item.category}</RNText>
+                          </View>
+                        </View>
+                        {isLowStock && (
+                          <View style={styles.lowStockBadge}>
+                            <MaterialCommunityIcons name="alert-circle" size={14} color="#EF4444" />
+                            <RNText style={styles.lowStockText}>Low Stock</RNText>
+                          </View>
+                        )}
+                      </View>
+                      
+                      <View style={styles.inventoryStats}>
+                        <View style={styles.statBox}>
+                          <RNText style={styles.statLabel}>Current Stock</RNText>
+                          <RNText style={[styles.statValue, { color: isLowStock ? '#EF4444' : '#10B981' }]}>
+                            {item.quantity}
+                          </RNText>
+                          <RNText style={styles.statUnit}>units</RNText>
+                        </View>
+                        
+                        <View style={styles.statDivider} />
+                        
+                        <View style={styles.statBox}>
+                          <RNText style={styles.statLabel}>Min Stock</RNText>
+                          <RNText style={styles.statValue}>{item.minStock}</RNText>
+                          <RNText style={styles.statUnit}>units</RNText>
+                        </View>
+                        
+                        <View style={styles.statDivider} />
+                        
+                        <View style={styles.statBox}>
+                          <RNText style={styles.statLabel}>Status</RNText>
+                          <RNText style={[styles.statValue, { color: expiry.color, fontSize: 14 }]}>
+                            {expiry.status}
+                          </RNText>
+                          <RNText style={styles.statUnit}>{item.expiryDate}</RNText>
+                        </View>
+                      </View>
+                      
+                      <View style={styles.inventoryActions}>
+                        {isLowStock && (
+                          <TouchableOpacity
+                            style={[styles.inventoryButton, styles.alertButton]}
+                            onPress={() => sendLowStockAlert(item)}
+                          >
+                            <MaterialCommunityIcons name="alert" size={18} color="#fff" />
+                            <RNText style={styles.inventoryButtonText}>Send Alert</RNText>
+                          </TouchableOpacity>
+                        )}
+                        <TouchableOpacity
+                          style={[styles.inventoryButton, styles.restockButton, isLowStock && { flex: 1 }]}
+                          onPress={() => handleRequestRestock(item)}
+                        >
+                          <MaterialCommunityIcons name="package-variant" size={18} color="#fff" />
+                          <RNText style={styles.inventoryButtonText}>Request Restock</RNText>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                })}
+            </View>
+          </ScrollView>
+        )}
+        
+        {/* Restock Requests */}
+        {activeNav === 'restock' && (
+          <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+            <View style={styles.section}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                <MaterialCommunityIcons name="package-variant" size={28} color="#1E4BA3" />
+                <RNText style={styles.sectionTitle}>Restock Requests</RNText>
+              </View>
+              
+              <View style={styles.infoCard}>
+                <MaterialCommunityIcons name="information" size={24} color="#1E4BA3" />
+                <RNText style={styles.infoText}>
+                  View and manage your supply restock requests. Track pending orders and receive notifications when items are restocked.
+                </RNText>
+              </View>
+              
+              <View style={styles.testCard}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <RNText style={styles.testName}>CBC Reagent Kit</RNText>
+                  <View style={[styles.badge, { backgroundColor: '#FEF3C7' }]}>
+                    <RNText style={[styles.badgeText, { color: '#92400E' }]}>Pending</RNText>
+                  </View>
+                </View>
+                <RNText style={styles.label}>Requested: 50 units</RNText>
+                <RNText style={styles.label}>Date: 2024-12-10</RNText>
+                <RNText style={styles.label}>Status: Awaiting approval</RNText>
+              </View>
+              
+              <View style={styles.testCard}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <RNText style={styles.testName}>Glucose Test Strips</RNText>
+                  <View style={[styles.badge, { backgroundColor: '#D1FAE5' }]}>
+                    <RNText style={[styles.badgeText, { color: '#065F46' }]}>Approved</RNText>
+                  </View>
+                </View>
+                <RNText style={styles.label}>Requested: 100 units</RNText>
+                <RNText style={styles.label}>Date: 2024-12-08</RNText>
+                <RNText style={styles.label}>Status: Expected delivery: 2024-12-18</RNText>
+              </View>
+            </View>
+          </ScrollView>
+        )}
+        
+        {/* Lab Reports */}
+        {activeNav === 'reports' && (
+          <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+            <View style={styles.section}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                <MaterialCommunityIcons name="chart-bar" size={28} color="#1E4BA3" />
+                <RNText style={styles.sectionTitle}>Lab Reports & Analytics</RNText>
+              </View>
+              
+              <TouchableOpacity
+                style={[styles.testCard, { backgroundColor: '#EFF6FF' }]}
+                onPress={generateLabReport}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                  <MaterialCommunityIcons name="file-chart" size={32} color="#1E4BA3" />
+                  <View style={{ marginLeft: 16, flex: 1 }}>
+                    <RNText style={[styles.testName, { color: '#1E4BA3' }]}>Lab Statistics Report</RNText>
+                    <RNText style={styles.testType}>Monthly test analytics and metrics</RNText>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={24} color="#1E4BA3" />
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.testCard, { backgroundColor: '#F0FDF4' }]}
+                onPress={() => Alert.alert('Usage Report', 'Reagent and supply usage report for the last 30 days.')}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                  <MaterialCommunityIcons name="chart-line" size={32} color="#10B981" />
+                  <View style={{ marginLeft: 16, flex: 1 }}>
+                    <RNText style={[styles.testName, { color: '#10B981' }]}>Supply Usage Report</RNText>
+                    <RNText style={styles.testType}>Track reagent and equipment usage</RNText>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={24} color="#10B981" />
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.testCard, { backgroundColor: '#FEF3C7' }]}
+                onPress={() => Alert.alert('Expiry Report', 'List of items expiring within 30 days.')}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                  <MaterialCommunityIcons name="calendar-alert" size={32} color="#F59E0B" />
+                  <View style={{ marginLeft: 16, flex: 1 }}>
+                    <RNText style={[styles.testName, { color: '#D97706' }]}>Expiry Report</RNText>
+                    <RNText style={styles.testType}>Items expiring soon</RNText>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={24} color="#F59E0B" />
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.testCard, { backgroundColor: '#FEE2E2' }]}
+                onPress={() => Alert.alert('Quality Control Report', 'QC test results and compliance metrics.')}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                  <MaterialCommunityIcons name="shield-check" size={32} color="#EF4444" />
+                  <View style={{ marginLeft: 16, flex: 1 }}>
+                    <RNText style={[styles.testName, { color: '#DC2626' }]}>Quality Control Report</RNText>
+                    <RNText style={styles.testType}>QC metrics and compliance</RNText>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={24} color="#EF4444" />
+                </View>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        )}
+
+        {/* Restock Request Modal */}
+        <Modal visible={showRestockModal} animationType="slide" transparent onRequestClose={() => setShowRestockModal(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <RNText style={styles.modalTitle}>Request Restock</RNText>
+                <TouchableOpacity onPress={() => setShowRestockModal(false)}>
+                  <Ionicons name="close" size={24} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.modalBody}>
+                {restockItem && (
+                  <>
+                    <View style={styles.detailRow}>
+                      <RNText style={styles.detailLabel}>Item Name</RNText>
+                      <RNText style={styles.detailValue}>{restockItem.name}</RNText>
+                    </View>
+                    
+                    <View style={styles.detailRow}>
+                      <RNText style={styles.detailLabel}>Current Stock</RNText>
+                      <RNText style={[styles.detailValue, { color: '#EF4444' }]}>{restockItem.quantity} units</RNText>
+                    </View>
+                    
+                    <View style={styles.detailRow}>
+                      <RNText style={styles.detailLabel}>Minimum Stock</RNText>
+                      <RNText style={styles.detailValue}>{restockItem.minStock} units</RNText>
+                    </View>
+                    
+                    <View style={{ marginTop: 16 }}>
+                      <RNText style={styles.detailLabel}>Request Quantity *</RNText>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Enter quantity to request"
+                        keyboardType="numeric"
+                        value={restockQuantity}
+                        onChangeText={setRestockQuantity}
+                      />
+                    </View>
+                  </>
+                )}
+              </View>
+              
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.uploadButton]}
+                  onPress={submitRestockRequest}
+                >
+                  <MaterialCommunityIcons name="package-variant" size={20} color="#fff" />
+                  <RNText style={styles.modalButtonText}>Submit Request</RNText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setShowRestockModal(false)}
+                >
+                  <RNText style={styles.cancelButtonText}>Cancel</RNText>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         {/* Test Details Modal */}
         <Modal visible={showTestDetailsModal} animationType="slide" transparent onRequestClose={() => setShowTestDetailsModal(false)}>
@@ -879,6 +1293,65 @@ export default function LabTechnicianDashboard() {
             </View>
           </View>
         </Modal>
+
+        {/* Bottom Navigation Bar */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveNav('dashboard')}
+          >
+            <Ionicons
+              name={activeNav === 'dashboard' ? 'home' : 'home-outline'}
+              size={24}
+              color={activeNav === 'dashboard' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeNav === 'dashboard' && styles.bottomNavTextActive]}>
+              Home
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveNav('assigned-tests')}
+          >
+            <MaterialCommunityIcons
+              name={activeNav === 'assigned-tests' ? 'clipboard-list' : 'clipboard-list-outline'}
+              size={24}
+              color={activeNav === 'assigned-tests' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeNav === 'assigned-tests' && styles.bottomNavTextActive]}>
+              Tests
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveNav('upload-results')}
+          >
+            <MaterialCommunityIcons
+              name={activeNav === 'upload-results' ? 'cloud-upload' : 'cloud-upload-outline'}
+              size={24}
+              color={activeNav === 'upload-results' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeNav === 'upload-results' && styles.bottomNavTextActive]}>
+              Upload
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveNav('inventory')}
+          >
+            <MaterialCommunityIcons
+              name={activeNav === 'inventory' ? 'archive' : 'archive-outline'}
+              size={24}
+              color={activeNav === 'inventory' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeNav === 'inventory' && styles.bottomNavTextActive]}>
+              Inventory
+            </RNText>
+          </TouchableOpacity>
+        </View>
       </ImageBackground>
     </View>
   );
@@ -958,7 +1431,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-  logoutButton: {
+  profileButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -1168,6 +1641,11 @@ const styles = StyleSheet.create({
     color: '#1F2937',
     marginBottom: 4,
   },
+  testType: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
   testPatient: {
     fontSize: 14,
     color: '#6B7280',
@@ -1221,19 +1699,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: 'transparent',
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
     paddingHorizontal: 14,
+    paddingVertical: 0,
     height: 50,
     marginBottom: 12,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
     fontSize: 15,
     color: '#1F2937',
   },
@@ -1442,6 +1915,308 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#6B7280',
+  },
+  menuOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  menuBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  menuContainer: {
+    width: 280,
+    backgroundColor: '#0F3460',
+    height: '100%',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        shadowOffset: { width: 2, height: 0 },
+      },
+      android: { elevation: 16 },
+    }),
+  },
+  menuHeader: {
+    backgroundColor: '#1E4BA3',
+    paddingTop: Platform.OS === 'android' ? 40 : 60,
+  },
+  menuTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  menuContent: {
+    flex: 1,
+    paddingTop: 16,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: 'transparent',
+  },
+  menuItemActive: {
+    backgroundColor: 'rgba(30, 75, 163, 0.3)',
+    borderLeftColor: '#fff',
+  },
+  menuItemText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#fff',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginVertical: 12,
+    marginHorizontal: 20,
+  },
+  searchInput: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+    color: '#1F2937',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginBottom: 16,
+  },
+  badge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  label: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  value: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#1E40AF',
+    lineHeight: 18,
+  },
+  input: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#1F2937',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#1E4BA3',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
+    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+    paddingTop: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  bottomNavItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  bottomNavText: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  bottomNavTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 20,
+  },
+  inventoryCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: { elevation: 3 },
+    }),
+  },
+  lowStockCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#EF4444',
+    backgroundColor: '#FFFBFA',
+  },
+  inventoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  inventoryTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  inventoryIconWrapper: {
+    width: 48,
+    height: 48,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inventoryTitleText: {
+    flex: 1,
+  },
+  inventoryName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 4,
+    letterSpacing: -0.3,
+  },
+  inventoryCategory: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  lowStockBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  lowStockText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#EF4444',
+    letterSpacing: 0.3,
+  },
+  inventoryStats: {
+    flexDirection: 'row',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  statBox: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  statUnit: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: 12,
+  },
+  inventoryActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  inventoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    flex: 1,
+  },
+  alertButton: {
+    backgroundColor: '#F59E0B',
+  },
+  restockButton: {
+    backgroundColor: '#1E4BA3',
+  },
+  inventoryButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: 0.2,
   },
 });
 

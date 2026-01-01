@@ -17,6 +17,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import ManageNotifications from '../../components/lab-technician/ManageNotifications';
 import DispensingHistory from '../../components/pharmacist/DispensingHistory';
 import QRScanner from '../../components/pharmacist/QRScanner';
 import AppointmentsView from '../../components/shared/AppointmentsView';
@@ -74,8 +75,9 @@ export default function PharmacistDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [pharmacistUser, setPharmacistUser] = useState<any>(null);
-  const [activeNav, setActiveNav] = useState<'dashboard' | 'qr-scanner' | 'history' | 'appointments'>('dashboard');
+  const [activeNav, setActiveNav] = useState<'dashboard' | 'qr-scanner' | 'history' | 'appointments' | 'inventory'>('dashboard');
   const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'prescriptions' | 'alerts'>('overview');
+  const [menuOpen, setMenuOpen] = useState(false);
   
   const [stats, setStats] = useState<DashboardStats>({
     totalMedicines: 1247,
@@ -320,32 +322,32 @@ export default function PharmacistDashboardScreen() {
       {/* Stats Grid - Animations removed for performance */}
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, { backgroundColor: '#3B82F615' }]}>
-            <MaterialCommunityIcons name="pill" size={28} color="#3B82F6" />
+          <View style={styles.statIconContainer}>
+            <MaterialCommunityIcons name="pill" size={28} color="#FFFFFF" />
           </View>
           <RNText style={styles.statValue}>{stats.totalMedicines}</RNText>
           <RNText style={styles.statLabel}>Total Medicines</RNText>
         </View>
 
         <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, { backgroundColor: '#EF444415' }]}>
-            <MaterialCommunityIcons name="alert-circle" size={28} color="#EF4444" />
+          <View style={styles.statIconContainer}>
+            <MaterialCommunityIcons name="alert-circle" size={28} color="#FFFFFF" />
           </View>
           <RNText style={styles.statValue}>{stats.lowStockItems}</RNText>
           <RNText style={styles.statLabel}>Low Stock</RNText>
         </View>
 
         <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, { backgroundColor: '#10B98115' }]}>
-            <MaterialCommunityIcons name="clipboard-text" size={28} color="#10B981" />
+          <View style={styles.statIconContainer}>
+            <MaterialCommunityIcons name="clipboard-text" size={28} color="#FFFFFF" />
           </View>
           <RNText style={styles.statValue}>{stats.prescriptionsToday}</RNText>
           <RNText style={styles.statLabel}>Today's Rx</RNText>
         </View>
 
         <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, { backgroundColor: '#F59E0B15' }]}>
-            <MaterialCommunityIcons name="refresh-circle" size={28} color="#F59E0B" />
+          <View style={styles.statIconContainer}>
+            <MaterialCommunityIcons name="refresh-circle" size={28} color="#FFFFFF" />
           </View>
           <RNText style={styles.statValue}>{stats.pendingReorders}</RNText>
           <RNText style={styles.statLabel}>Reorders</RNText>
@@ -587,6 +589,10 @@ export default function PharmacistDashboardScreen() {
           </TouchableOpacity>
         </View>
       ))}
+
+      <View style={{ marginTop: 16 }}>
+        <ManageNotifications embedded showBackground={false} />
+      </View>
     </View>
   );
 
@@ -608,96 +614,127 @@ export default function PharmacistDashboardScreen() {
       >
         <View style={styles.gradientOverlay} />
 
-        {/* Header - Animation removed for performance */}
+        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity 
               style={styles.backButton} 
-              onPress={async () => {
-                await sessionService.clearSession();
-                router.replace('/(auth)/login' as any);
-              }}
+              onPress={() => setMenuOpen(true)}
             >
-              <Ionicons name="arrow-back" size={24} color="#fff" />
+              <Ionicons name="menu" size={28} color="#fff" />
             </TouchableOpacity>
             <View>
               <RNText style={styles.greeting}>Welcome Back, Pharmacist</RNText>
               <RNText style={styles.userName}>{pharmacistUser?.fullName || 'Pharmacist'}</RNText>
             </View>
           </View>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={24} color="#fff" />
+          <TouchableOpacity style={styles.profileButton}>
+            <Ionicons name="person-circle-outline" size={32} color="#fff" />
           </TouchableOpacity>
         </View>
 
-        {/* Navigation Bar */}
-        <View style={styles.navContainer}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.navScrollContent}
-          >
-            <TouchableOpacity 
-              style={[styles.navItem, activeTab === 'overview' && styles.navItemActive]}
-              onPress={() => {
-                setActiveTab('overview');
-                setActiveNav('dashboard');
-              }}
-            >
-              <MaterialCommunityIcons 
-                name="view-dashboard" 
-                size={20} 
-                color={activeTab === 'overview' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeTab === 'overview' && styles.navTextActive]}>Dashboard</RNText>
-            </TouchableOpacity>
+        {/* Hamburger Menu Modal */}
+        <Modal
+          visible={menuOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setMenuOpen(false)}
+        >
+          <View style={styles.menuOverlay}>
+            {/* Menu Sidebar */}
+            <View style={styles.menuContainer}>
+              {/* Menu Header */}
+              <View style={styles.menuHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 }}>
+                  <RNText style={styles.menuTitle}>Medi Vault</RNText>
+                  <TouchableOpacity onPress={() => setMenuOpen(false)}>
+                    <Ionicons name="close" size={28} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              </View>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeTab === 'inventory' && styles.navItemActive]}
-              onPress={() => {
-                setActiveTab('inventory');
-                setActiveNav('dashboard');
-              }}
-            >
-              <MaterialCommunityIcons 
-                name="package-variant" 
-                size={20} 
-                color={activeTab === 'inventory' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeTab === 'inventory' && styles.navTextActive]}>Inventory</RNText>
-            </TouchableOpacity>
+              {/* Menu Items */}
+              <ScrollView style={styles.menuContent}>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'dashboard' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('dashboard'); setActiveTab('overview'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="view-dashboard" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Dashboard</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeTab === 'prescriptions' && styles.navItemActive]}
-              onPress={() => {
-                setActiveTab('prescriptions');
-                setActiveNav('dashboard');
-              }}
-            >
-              <MaterialCommunityIcons 
-                name="prescription" 
-                size={20} 
-                color={activeTab === 'prescriptions' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeTab === 'prescriptions' && styles.navTextActive]}>Prescriptions</RNText>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeTab === 'inventory' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('dashboard'); setActiveTab('inventory'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="package-variant" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Inventory</RNText>
+                </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[styles.navItem, activeTab === 'alerts' && styles.navItemActive]}
-              onPress={() => {
-                setActiveTab('alerts');
-                setActiveNav('dashboard');
-              }}
-            >
-              <Ionicons 
-                name="notifications-outline" 
-                size={20} 
-                color={activeTab === 'alerts' ? '#1E4BA3' : '#6B7280'} 
-              />
-              <RNText style={[styles.navText, activeTab === 'alerts' && styles.navTextActive]}>Alerts</RNText>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
+                <TouchableOpacity
+                  style={[styles.menuItem, activeTab === 'prescriptions' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('dashboard'); setActiveTab('prescriptions'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="prescription" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Prescriptions</RNText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'qr-scanner' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('qr-scanner'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="qrcode-scan" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>QR Scanner</RNText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'history' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('history'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="history" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Dispensing History</RNText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.menuItem, activeTab === 'alerts' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('dashboard'); setActiveTab('alerts'); setMenuOpen(false); }}
+                >
+                  <Ionicons name="notifications-outline" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Stock Alerts</RNText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.menuItem, activeNav === 'appointments' && styles.menuItemActive]}
+                  onPress={() => { setActiveNav('appointments'); setMenuOpen(false); }}
+                >
+                  <MaterialCommunityIcons name="calendar-clock" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Appointments</RNText>
+                </TouchableOpacity>
+
+                <View style={styles.menuDivider} />
+
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={async () => {
+                    setMenuOpen(false);
+                    await sessionService.clearSession();
+                    router.replace('/(auth)/login' as any);
+                  }}
+                >
+                  <Ionicons name="log-out-outline" size={24} color="#fff" />
+                  <RNText style={styles.menuItemText}>Back to Login</RNText>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+
+            {/* Backdrop */}
+            <TouchableOpacity
+              style={styles.menuBackdrop}
+              activeOpacity={1}
+              onPress={() => setMenuOpen(false)}
+            />
+          </View>
+        </Modal>
 
         {/* Content */}
         {activeNav === 'qr-scanner' ? (
@@ -771,6 +808,65 @@ export default function PharmacistDashboardScreen() {
             </View>
           </View>
         </Modal>
+
+        {/* Bottom Navigation Bar */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveNav('dashboard')}
+          >
+            <Ionicons
+              name={activeNav === 'dashboard' ? 'home' : 'home-outline'}
+              size={24}
+              color={activeNav === 'dashboard' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeNav === 'dashboard' && styles.bottomNavTextActive]}>
+              Home
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveNav('qr-scanner')}
+          >
+            <MaterialCommunityIcons
+              name={activeNav === 'qr-scanner' ? 'qrcode-scan' : 'qrcode-scan'}
+              size={24}
+              color={activeNav === 'qr-scanner' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeNav === 'qr-scanner' && styles.bottomNavTextActive]}>
+              Scan QR
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveNav('inventory')}
+          >
+            <MaterialCommunityIcons
+              name={activeNav === 'inventory' ? 'package-variant' : 'package-variant'}
+              size={24}
+              color={activeNav === 'inventory' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeNav === 'inventory' && styles.bottomNavTextActive]}>
+              Inventory
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bottomNavItem}
+            onPress={() => setActiveNav('history')}
+          >
+            <MaterialCommunityIcons
+              name={activeNav === 'history' ? 'history' : 'history'}
+              size={24}
+              color={activeNav === 'history' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)'}
+            />
+            <RNText style={[styles.bottomNavText, activeNav === 'history' && styles.bottomNavTextActive]}>
+              History
+            </RNText>
+          </TouchableOpacity>
+        </View>
       </ImageBackground>
     </View>
   );
@@ -830,7 +926,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginTop: 4,
   },
-  logoutButton: {
+  profileButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -921,7 +1017,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   statsGrid: {
@@ -933,18 +1029,18 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: '#fff',
+    backgroundColor: '#1E4BA3',
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOpacity: 0.05,
+        shadowOpacity: 0.2,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 2 },
       },
-      android: { elevation: 2 },
+      android: { elevation: 4 },
     }),
   },
   statIconContainer: {
@@ -954,16 +1050,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1F2937',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
   },
   quickActionsGrid: {
@@ -1370,6 +1467,100 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  menuOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  menuBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  menuContainer: {
+    width: 280,
+    backgroundColor: '#0F3460',
+    height: '100%',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        shadowOffset: { width: 2, height: 0 },
+      },
+      android: { elevation: 16 },
+    }),
+  },
+  menuHeader: {
+    backgroundColor: '#1E4BA3',
+    paddingTop: Platform.OS === 'android' ? 40 : 60,
+  },
+  menuTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  menuContent: {
+    flex: 1,
+    paddingTop: 16,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: 'transparent',
+  },
+  menuItemActive: {
+    backgroundColor: 'rgba(30, 75, 163, 0.3)',
+    borderLeftColor: '#fff',
+  },
+  menuItemText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#fff',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginVertical: 12,
+    marginHorizontal: 20,
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#1E4BA3',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
+    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+    paddingTop: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  bottomNavItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  bottomNavText: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  bottomNavTextActive: {
+    color: '#FFFFFF',
     fontWeight: '600',
   },
 });

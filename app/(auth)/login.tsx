@@ -77,12 +77,14 @@ export default function LoginScreen() {
               autoCapitalize="none"
             />
 
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleLogin}
-              disabled={loading}>
-              <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Login'}</Text>
-            </TouchableOpacity>
+            
+            <TouchableOpacity 
+  style={styles.buttonPrimary}
+  onPress={() => router.push("/patient-dashboard")}
+>
+  <Text style={styles.buttonText}>Login</Text>
+</TouchableOpacity>
+
 
             <Link href="/(auth)/forgot-password" asChild>
               <TouchableOpacity style={styles.linkButton}>
@@ -143,8 +145,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
   },
-  button: {
-    backgroundColor: '#007AFF',
+  
+  
+  buttonPrimary: {
+    backgroundColor: '#34C759',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',

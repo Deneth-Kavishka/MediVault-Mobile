@@ -1,0 +1,151 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                MEDIVAULT QUICK REFERENCE CARD                     ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🚀 START EVERYTHING                                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Terminal 1 (Backend):                                          │
+│  > cd backend                                                    │
+│  > npm run dev                                                   │
+│                                                                  │
+│  Terminal 2 (Frontend):                                         │
+│  > npm start                                                     │
+│                                                                  │
+│  OR just double-click:                                          │
+│  > start-backend.bat                                            │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 📂 IMPORTANT FILES TO UPDATE                                     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ⚠️  backend/.env                                                │
+│     Update: DB_PASSWORD=your_postgres_password                  │
+│                                                                  │
+│  📱 For Physical Device:                                        │
+│     src/config/constants.ts                                     │
+│     Update: API_BASE_URL = 'http://YOUR_IP:5000/api'           │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🗄️ DATABASE SETUP (One Time)                                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  1. Open pgAdmin                                                │
+│  2. Create database: medivault_db                               │
+│  3. Run: backend/database/schema.sql                            │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🧪 TEST CONNECTION                                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  > cd backend                                                    │
+│  > node test-api.js                                             │
+│                                                                  │
+│  Should show:                                                    │
+│  ✅ Health check passed                                         │
+│  ✅ User created successfully                                   │
+│  ✅ Retrieved users successfully                                │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🌐 NETWORK ADDRESSES                                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Backend Server:    http://localhost:5000                       │
+│  Health Check:      http://localhost:5000/api/health            │
+│                                                                  │
+│  Android Emulator:  http://10.0.2.2:5000/api                    │
+│  iOS Simulator:     http://localhost:5000/api                   │
+│  Physical Device:   http://YOUR_COMPUTER_IP:5000/api            │
+│                                                                  │
+│  Find your IP:                                                   │
+│  > ipconfig                                                      │
+│  Look for: IPv4 Address                                         │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🔌 API ENDPOINTS                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  POST   /api/auth/login          Login user                     │
+│  POST   /api/auth/register       Register patient               │
+│                                                                  │
+│  POST   /api/users/create        Create user (admin) ✅         │
+│  GET    /api/users               Get all users                  │
+│  GET    /api/users/:id           Get user by ID                 │
+│  PUT    /api/users/:id           Update user                    │
+│  DELETE /api/users/:id           Delete user                    │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 🐛 TROUBLESHOOTING                                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ❌ "Unable to connect to server"                               │
+│     → Start backend: npm run dev (in backend folder)            │
+│                                                                  │
+│  ❌ "Database connection failed"                                │
+│     → Check PostgreSQL is running                               │
+│     → Verify password in backend/.env                           │
+│     → Ensure medivault_db exists                                │
+│                                                                  │
+│  ❌ "Network request failed" (physical device)                  │
+│     → Use computer's IP in constants.ts                         │
+│     → Same WiFi network                                         │
+│     → Allow port 5000 in firewall                               │
+│                                                                  │
+│  Allow Firewall (Run as Admin):                                 │
+│  > netsh advfirewall firewall add rule name="MediVault" ^      │
+│    dir=in action=allow protocol=TCP localport=5000             │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 📊 CHECK DATABASE                                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  pgAdmin:                                                        │
+│  medivault_db → Schemas → public → Tables → users              │
+│  Right-click → View/Edit Data → All Rows                       │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 📚 DOCUMENTATION                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  • SETUP_COMPLETE.md              Full summary                  │
+│  • BACKEND_CONNECTION_GUIDE.md    Detailed setup                │
+│  • ARCHITECTURE_DIAGRAM.md        System architecture           │
+│  • backend/README.md              Backend API docs              │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ ✅ WHAT'S CONNECTED                                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  React Native App  →  Node.js API  →  PostgreSQL Database      │
+│                                                                  │
+│  ✅ Admin Add User Component                                    │
+│  ✅ Form validation                                             │
+│  ✅ HTTP POST to backend                                        │
+│  ✅ Password hashing                                            │
+│  ✅ Database storage                                            │
+│  ✅ Success/error handling                                      │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════╗
+║  🎊 Your frontend is now connected to PostgreSQL database!       ║
+╚══════════════════════════════════════════════════════════════════╝

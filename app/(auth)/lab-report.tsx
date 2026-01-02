@@ -1,3 +1,4 @@
+
 // app/(auth)/lab-report.tsx
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Print from "expo-print";
@@ -17,10 +18,12 @@ import {
   View,
 } from "react-native";
 
+
 /* -----------------------
    Types
    ----------------------- */
 interface Report {
+
   id: string | number;
   title: string;
   testType: string;
@@ -33,6 +36,7 @@ interface Report {
   summary: string;
   details: string;
   resultFileUrl?: string;
+
 }
 
 /* -----------------------
@@ -57,6 +61,7 @@ const mockFetchLabReports = (): Promise<Report[]> =>
         {
           id: 202,
           title: "Lipid Profile",
+
           testType: "Blood Test",
           date: "2025-12-30",
           doctor: "Nimal Fernando",
@@ -68,6 +73,7 @@ const mockFetchLabReports = (): Promise<Report[]> =>
         },
         {
           id: 203,
+
           title: "Fasting Blood Glucose",
           testType: "Blood Test",
           date: "2025-12-30",
@@ -127,6 +133,7 @@ function generateReportHTML(report: Report) {
     <body style="font-family: Arial; padding: 18px;">
       <h1>${report.title}</h1>
       <p><b>Doctor:</b> ${report.doctor}</p>
+
       <p><b>Lab Facility:</b> ${report.labFacility}</p>
       <p><b>Test Type:</b> ${report.testType}</p>
       <p><b>Date:</b> ${report.date}</p>
@@ -149,8 +156,8 @@ export default function LabReportsScreen() {
   const [data, setData] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [search, setSearch] = useState("");
+
   const [statusFilter, setStatusFilter] = useState<string>("All Statuses");
   const [urgencyFilter, setUrgencyFilter] = useState<string>("All Urgency Levels");
   const [resultsFilter, setResultsFilter] = useState<string>("All Results");
@@ -165,6 +172,7 @@ export default function LabReportsScreen() {
   const [selected, setSelected] = useState<Report | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | number | null>(null);
 
+
   // Load
   useEffect(() => {
     load();
@@ -174,6 +182,7 @@ export default function LabReportsScreen() {
     setLoading(true);
     setError(null);
     try {
+
       const response = await fetch('http://localhost:4000/lab-reports');
       const json = await response.json();
       
@@ -190,11 +199,13 @@ export default function LabReportsScreen() {
       }
     } catch (e) {
       console.error('Error loading lab reports:', e);
+
       setError("Failed to load lab reports.");
     } finally {
       setLoading(false);
     }
   };
+
 
   const statusOptions = ["All Statuses", "pending", "approved", "in_progress", "completed"];
   const urgencyOptions = ["All Urgency Levels", "normal", "high", "urgent", "abnormal"];
@@ -253,6 +264,7 @@ export default function LabReportsScreen() {
     return true;
   });
 
+
   const openDetails = (item: Report) => {
     setSelected(item);
     setModalVisible(true);
@@ -281,6 +293,7 @@ export default function LabReportsScreen() {
       setDownloadingId(null);
     }
   };
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -626,6 +639,7 @@ export default function LabReportsScreen() {
         </View>
       </Modal>
 
+
       {/* MODAL */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalBg}>
@@ -639,6 +653,7 @@ export default function LabReportsScreen() {
 
             <ScrollView style={{ marginTop: 10 }}>
               <Text>Doctor: {selected?.doctor}</Text>
+
               <Text>Lab Facility: {selected?.labFacility}</Text>
               <Text>Date: {selected?.date}</Text>
               <Text>Status: {selected?.status}</Text>
@@ -661,6 +676,7 @@ export default function LabReportsScreen() {
           </View>
         </View>
       </Modal>
+
       </ScrollView>
 
       {/* BOTTOM NAVIGATION */}
@@ -679,6 +695,7 @@ export default function LabReportsScreen() {
           <Ionicons name="person-circle-outline" size={26} color="#333" />
           <Text style={styles.navText}>Profile</Text>
         </TouchableOpacity>
+
       </View>
     </View>
   );
@@ -688,6 +705,7 @@ export default function LabReportsScreen() {
    Styles
    ----------------------- */
 const styles = StyleSheet.create({
+
   root: { flex: 1, backgroundColor: "#F5F7FA", paddingTop: 40 },
 
   header: {
@@ -802,6 +820,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#333",
   },
+
 
   searchBox: {
     flexDirection: "row",
@@ -1018,11 +1037,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   modalBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
-
   bottomNav: {
     height: 60,
     backgroundColor: "#fff",
     borderTopWidth: 1,
+
     borderColor: "#E8EAED",
     flexDirection: "row",
     justifyContent: "space-around",
@@ -1037,5 +1056,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#6B7280",
     fontWeight: "500",
+
+   
   },
 });

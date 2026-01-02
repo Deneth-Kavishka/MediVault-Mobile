@@ -1,3 +1,4 @@
+
 const { Pool } = require('pg');
 const dotenv = require('dotenv');
 
@@ -59,8 +60,11 @@ async function migrate() {
     process.exitCode = 1;
   } finally {
     client.release();
+
     await pool.end();
   }
 }
 
+
 migrate();
+

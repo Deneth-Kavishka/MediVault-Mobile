@@ -1,4 +1,5 @@
 // app/(auth)/patient-dashboard.tsx
+
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
@@ -15,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 
 type Appointment = {
   id: string;
@@ -88,7 +90,9 @@ export default function PatientDashboard() {
   };
 
   return (
+
     <View style={styles.bg}>
+   
       <ScrollView contentContainerStyle={styles.container}>
 
         {/* Header */}
@@ -231,7 +235,9 @@ export default function PatientDashboard() {
         </View>
 
       </ScrollView>
+
     </View>
+
   );
 }
 

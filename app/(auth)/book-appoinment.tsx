@@ -1,3 +1,4 @@
+
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -16,8 +17,8 @@ import {
 import { API_BASE_URL } from "../../src/config/constants";
 
 
+// ---------------- Doctor Types ----------------
 
-// ---------------- TYPES ----------------
 interface Doctor {
   id: string;
   name: string;
@@ -42,7 +43,8 @@ const DOCTORS: Doctor[] = [
   { id: "ce138882-45ee-40f4-bfc8-9794ed4ea00d", name: "Dr. Ruwan", specialty: "Neurology", hospital: "Nawaloka Hospital" },
 ];
 
-// ---------------- COMPONENT ----------------
+
+
 export default function Appointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctorSearch, setDoctorSearch] = useState("");
@@ -54,6 +56,7 @@ export default function Appointments() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [reason, setReason] = useState("");
+
 
   // ---------------- BOOK APPOINTMENT (FIXED) ----------------
   const getApiBase = () => {
@@ -361,6 +364,214 @@ export default function Appointments() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#E8F3FF" },
   header: { fontSize: 28, fontWeight: "800", marginBottom: 15 },
+  const filteredDoctors = DOCTORS.filter((d) =>
+    d.specialty.toLowerCase().includes(doctorSearch.toLowerCase())
+  );
+
+  const bookAppointment = () => {
+    if (!selectedDoctor || !date || !time || !reason) return;
+
+    const newAppointment: Appointment = {
+      id: Math.random().toString(),
+      doctor: selectedDoctor,
+      date,
+      time,
+      reason,
+    };
+
+    setAppointments([...appointments, newAppointment]);
+
+    setDate("");
+    setTime("");
+    setReason("");
+    setSelectedDoctor(null);
+    setVisibleAdd(false);
+  };
+
+  const deleteAppointment = (id: string) => {
+    setAppointments(appointments.filter((x) => x.id !== id));
+  };
+
+  const renderAppointment = ({ item }: { item: Appointment }) => (
+    <View style={styles.card}>
+      <Text style={styles.docName}>{item.doctor.name}</Text>
+      <Text style={styles.label}>Specialty: {item.doctor.specialty}</Text>
+      <Text style={styles.label}>Hospital: {item.doctor.hospital}</Text>
+      <Text style={styles.label}>Date: {item.date}</Text>
+      <Text style={styles.label}>Time: {item.time}</Text>
+
+      <View style={styles.rowBetween}>
+        <Text style={styles.reason}>Reason: {item.reason}</Text>
+
+        <TouchableOpacity onPress={() => deleteAppointment(item.id)}>
+          <Ionicons name="trash-outline" size={22} color="red" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  return (
+      <View style={styles.container}>
+        <Text style={styles.header}>My Appointments</Text>
+
+        <TouchableOpacity
+          style={styles.addBtn}
+          onPress={() => setVisibleAdd(true)}
+        >
+          <Ionicons name="add-circle-outline" size={24} color="#fff" />
+          <Text style={styles.addBtnText}>Add Appointment</Text>
+        </TouchableOpacity>
+
+        <FlatList
+          data={appointments}
+          renderItem={renderAppointment}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={
+            <Text style={styles.empty}>No Appointments Found</Text>
+          }
+        />
+
+        {/* Add Appointment Modal */}
+        <Modal visible={visibleAdd} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <ScrollView>
+                <Text style={styles.modalTitle}>Book Appointment</Text>
+
+                <TouchableOpacity
+                  style={styles.selectDoctorBtn}
+                  onPress={() => setVisibleDoctorList(true)}
+                >
+                  <Text style={styles.selectDoctorText}>
+                    {selectedDoctor
+                      ? selectedDoctor.name + " (" + selectedDoctor.specialty + ")"
+                      : "Select Doctor"}
+                  </Text>
+                </TouchableOpacity>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Select Date (Ex: 2025-12-05)"
+                  value={date}
+                  onChangeText={setDate}
+                />
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Select Time (Ex: 10:30 AM)"
+                  value={time}
+                  onChangeText={setTime}
+                />
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Reason For Appointment"
+                  value={reason}
+                  onChangeText={setReason}
+                />
+
+                <TouchableOpacity style={styles.saveBtn} onPress={bookAppointment}>
+                  <Text style={styles.saveBtnText}>Confirm Booking</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.closeBtn}
+                  onPress={() => setVisibleAdd(false)}
+                >
+                  <Text style={styles.closeText}>Close</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Doctor Selection Modal */}
+        <Modal visible={visibleDoctorList} transparent animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+              <Text style={styles.modalTitle}>Search Doctors</Text>
+
+              <TextInput
+                style={styles.input}
+                placeholder="Search specialty (cardio, skin...)"
+                value={doctorSearch}
+                onChangeText={setDoctorSearch}
+              />
+
+              <ScrollView style={{ maxHeight: 300 }}>
+                {filteredDoctors.map((doc) => (
+                  <TouchableOpacity
+                    key={doc.id}
+                    style={styles.doctorItem}
+                    onPress={() => {
+                      setSelectedDoctor(doc);
+                      setVisibleDoctorList(false);
+                    }}
+                  >
+                    <Text style={styles.docName}>{doc.name}</Text>
+                    <Text style={styles.label}>{doc.specialty}</Text>
+                    <Text style={styles.label}>{doc.hospital}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setVisibleDoctorList(false)}
+              >
+                <Text style={styles.closeText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Bottom Navigation */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => router.push("/patient-dashboard")}
+          >
+            <Ionicons name="home-outline" size={26} color="#333" />
+            <Text style={styles.navLabel}>Home</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="calendar-outline" size={28} color="#0277BD" />
+            <Text style={[styles.navLabel, { color: "#0277BD" }]}>
+              Appointments
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => router.push("/(auth)/medicine")}
+          >
+            <Ionicons name="medkit-outline" size={26} color="#333" />
+            <Text style={styles.navLabel}>Medicine</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+  );
+}
+
+// -------------------------------------------------
+// STYLES
+// -------------------------------------------------
+const styles = StyleSheet.create({
+  container: { 
+    flex: 1, 
+    padding: 20,
+    backgroundColor: "#E8F3FF",  // ✅ Light Blue Background
+  },
+
+  header: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#0D47A1",
+    marginBottom: 15,
+  },
+
+
   addBtn: {
     flexDirection: "row",
     backgroundColor: "#0277BD",
@@ -382,6 +593,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
   modalBox: { width: "85%", backgroundColor: "#fff", padding: 15, borderRadius: 12 },
   modalTitle: { fontSize: 20, fontWeight: "800" },
   input: {

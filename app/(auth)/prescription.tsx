@@ -15,11 +15,13 @@ import {
   TextInput,
   TouchableOpacity,
   View
+
 } from "react-native";
 // @ts-ignore
 import * as Print from "expo-print";
 // @ts-ignore
 import * as Sharing from "expo-sharing";
+
 
 // API Configuration
 const API_BASE_URL = "http://localhost:4000";
@@ -38,6 +40,7 @@ type Prescription = {
   notes?: string;
   status: Status;
 };
+
 
 
 // Fetch prescriptions from backend
@@ -64,6 +67,7 @@ const fetchPrescriptions = async (): Promise<Prescription[]> => {
   }
 };
 
+
 const mockRequestRefill = (prescriptionId: number): Promise<{ success: boolean }> =>
   new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -79,6 +83,7 @@ export default function PrescriptionScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState<string>("");
+
   const [statusFilter, setStatusFilter] = useState<string>("All Statuses");
   const [doctorFilter, setDoctorFilter] = useState<string>("All Doctors");
   const [dateFilter, setDateFilter] = useState<string>("All Time");
@@ -98,15 +103,19 @@ export default function PrescriptionScreen() {
     setLoading(true);
     setError(null);
     try {
+
       const res = await fetchPrescriptions();
       setData(res);
       const m: Record<string | number, Animated.Value> = {};
       res.forEach((p) => (m[p.id as string | number] = new Animated.Value(0)));
+
       animValsRef.current = m;
       Animated.stagger(
         80,
         res.map((p) =>
+
           Animated.timing(animValsRef.current[p.id as string | number], {
+
             toValue: 1,
             duration: 350,
             useNativeDriver: true,
@@ -115,11 +124,14 @@ export default function PrescriptionScreen() {
       ).start();
     } catch (e: any) {
       setError(e.message || "Failed to load prescriptions");
+
       console.error('Load data error:', e);
+
     } finally {
       setLoading(false);
     }
   };
+
 
   const uniqueDoctors = ["All Doctors", ...Array.from(new Set(data.map(p => p.doctor)))];
   const statusOptions = ["All Statuses", "Pending", "Active", "Expired", "Completed"];
@@ -154,6 +166,7 @@ export default function PrescriptionScreen() {
 
   const hasActiveFilters = statusFilter !== "All Statuses" || doctorFilter !== "All Doctors" || dateFilter !== "All Time" || search !== "";
 
+
   const openDetails = (pres: Prescription) => {
     setSelected(pres);
     setDetailModalVisible(true);
@@ -166,8 +179,10 @@ export default function PrescriptionScreen() {
   const handleRequestRefill = async (pres: Prescription) => {
     setRefillLoadingId(pres.id);
     try {
+
       // Request refill functionality to be implemented
       await new Promise(resolve => setTimeout(resolve, 1000));
+
       Alert.alert("Refill Requested", "Your refill request has been sent to the pharmacy.");
     } catch (e: any) {
       Alert.alert("Request Failed", e.message || "Unable to request refill.");
@@ -273,6 +288,7 @@ export default function PrescriptionScreen() {
   };
 
   return (
+
     <View style={styles.root}>
       {/* Header */}
       <View style={styles.header}>
@@ -312,6 +328,7 @@ export default function PrescriptionScreen() {
             returnKeyType="search"
           />
         </View>
+
 
         {/* Filter Row */}
         <View style={styles.filterRow}>
@@ -362,6 +379,7 @@ export default function PrescriptionScreen() {
         ) : filtered.length === 0 ? (
           <View style={styles.center}>
             <Ionicons name="document-outline" size={48} color="#999" />
+
             <Text style={{ marginTop: 12, color: "#666" }}>No prescriptions found</Text>
           </View>
         ) : (
@@ -600,11 +618,14 @@ export default function PrescriptionScreen() {
           <Text style={styles.navText}>Profile</Text>
         </TouchableOpacity>
       </View>
+
     </View>
+
   );
 }
 
 const styles = StyleSheet.create({
+
   root: { flex: 1, backgroundColor: "#F5F7FA", paddingTop: 40 },
   header: {
     backgroundColor: "#fff",
@@ -943,4 +964,5 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontWeight: "500",
   },
+
 });

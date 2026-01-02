@@ -10,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
 // ---------------- DB CONFIG ----------------
 // ---------------- DB CONFIG ----------------
 // server.js
@@ -32,10 +33,12 @@ async function testDb() {
 }
 
 // ---------------- HEALTH ----------------
+
 app.get('/health', async (req, res) => {
   const db = await testDb();
   res.json({ ok: true, db });
 });
+
 
 // ---------------- GET APPOINTMENTS ----------------
 app.get('/appointments', async (req, res) => {
@@ -282,10 +285,11 @@ app.delete('/appointments/:patient_id/:appointment_date', async (req, res) => {
   }
 });
 
-// ---------------- ROOT ----------------
+
 app.get('/', (req, res) => {
   res.json({ ok: true, message: 'MediVault backend running' });
 });
+
 
 // ---------------- START SERVER ----------------
 const PORT = process.env.PORT || 4000;
@@ -302,3 +306,4 @@ const PORT = process.env.PORT || 4000;
     console.log(`🚀 Server running on http://localhost:${PORT}`);
   });
 })();
+

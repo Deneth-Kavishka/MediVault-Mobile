@@ -7,8 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  FlatList,
-  ImageBackground,
   Modal,
   Platform,
   ScrollView,
@@ -16,17 +14,22 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
+
 } from "react-native";
 // @ts-ignore
 import * as Print from "expo-print";
 // @ts-ignore
 import * as Sharing from "expo-sharing";
 
+
+// API Configuration
+const API_BASE_URL = "http://localhost:4000";
+
 type Status = "Pending" | "Active" | "Expired" | "Completed";
 
 type Prescription = {
-  id: number;
+  id: string | number;
   doctor: string;
   doctorContact?: string;
   patientName: string;
@@ -39,64 +42,31 @@ type Prescription = {
 };
 
 
-const mockFetchPrescriptions = (): Promise<Prescription[]> =>
-  new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        {
-          id: 101,
-          doctor: "Dr. Rohan Perera",
-          doctorContact: "tel:+94123456789",
-          patientName: "Nethra Sandamini",
-          issuedDate: "2025-07-10",
-          pharmacy: "City Pharmacy",
-          refillDate: "2025-08-10",
-          medicines: [
-            { name: "Amoxicillin 500mg", dose: "1 capsule", frequency: "3x / day" },
-            { name: "Vitamin C 500mg", dose: "1 tablet", frequency: "1x / day" },
-          ],
-          notes: "Take after food. Finish full course.",
-          status: "Active",
-        },
-        {
-          id: 102,
-          doctor: "Dr. Kavitha Frendo",
-          doctorContact: "mailto:dr.kavitha@example.com",
-          patientName: "Saduni Himasha",
-          issuedDate: "2024-12-01",
-          pharmacy: "Green Valley Pharmacy",
-          refillDate: null,
-          medicines: [{ name: "Ibuprofen 200mg", dose: "1 tablet", frequency: "2x / day" }],
-          notes: "Use only if pain persists.",
-          status: "Expired",
-        },
-        {
-          id: 103,
-          doctor: "Dr. Sunil Kumar",
-          doctorContact: "tel:+94771234567",
-          patientName: "Saduni Himasha",
-          issuedDate: "2025-11-23",
-          pharmacy: "Sunrise Pharmacy",
-          refillDate: "2026-02-01",
-          medicines: [{ name: "Cetirizine 10mg", dose: "1 tablet", frequency: "1x / day" }],
-          notes: "For allergy control.",
-          status: "Pending",
-        },
-        {
-          id: 104,
-          doctor: "Dr. Meera Jayasuriya",
-          doctorContact: "mailto:meera@example.com",
-          patientName: "Saduni Himasha",
-          issuedDate: "2025-01-15",
-          pharmacy: "City Pharmacy",
-          refillDate: null,
-          medicines: [{ name: "Paracetamol 500mg", dose: "1 tablet", frequency: "3x / day" }],
-          notes: "If fever above 38°C.",
-          status: "Completed",
-        },
-      ]);
-    }, 900);
-  });
+
+// Fetch prescriptions from backend
+const fetchPrescriptions = async (): Promise<Prescription[]> => {
+  try {
+    console.log('Fetching prescriptions from:', `${API_BASE_URL}/prescriptions`);
+    const response = await fetch(`${API_BASE_URL}/prescriptions`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log('Prescriptions response:', result);
+    
+    if (result.ok && Array.isArray(result.data)) {
+      return result.data;
+    }
+    
+    throw new Error('Invalid response format');
+  } catch (error) {
+    console.error('Error fetching prescriptions:', error);
+    throw error;
+  }
+};
+
 
 const mockRequestRefill = (prescriptionId: number): Promise<{ success: boolean }> =>
   new Promise((resolve, reject) => {
@@ -109,17 +79,21 @@ const mockRequestRefill = (prescriptionId: number): Promise<{ success: boolean }
 export default function PrescriptionScreen() {
   // mark navigation as any to avoid strict route typing errors in this screen
   const navigation = useNavigation<any>();
-  const tabs: Status[] = ["Pending", "Active", "Expired", "Completed"];
-  const [tab, setTab] = useState<Status>("Pending");
   const [data, setData] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState<string>("");
+
+  const [statusFilter, setStatusFilter] = useState<string>("All Statuses");
+  const [doctorFilter, setDoctorFilter] = useState<string>("All Doctors");
+  const [dateFilter, setDateFilter] = useState<string>("All Time");
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selected, setSelected] = useState<Prescription | null>(null);
-  const [refillLoadingId, setRefillLoadingId] = useState<number | null>(null);
+  const [refillLoadingId, setRefillLoadingId] = useState<string | number | null>(null);
+  const [statusModalVisible, setStatusModalVisible] = useState(false);
+  const [doctorModalVisible, setDoctorModalVisible] = useState(false);
 
-  const animValsRef = useRef<Record<number, Animated.Value>>({});
+  const animValsRef = useRef<Record<string | number, Animated.Value>>({});
 
   useEffect(() => {
     loadData();
@@ -129,15 +103,19 @@ export default function PrescriptionScreen() {
     setLoading(true);
     setError(null);
     try {
-      const res = await mockFetchPrescriptions();
+
+      const res = await fetchPrescriptions();
       setData(res);
-      const m: Record<number, Animated.Value> = {};
-      res.forEach((p) => (m[p.id] = new Animated.Value(0)));
+      const m: Record<string | number, Animated.Value> = {};
+      res.forEach((p) => (m[p.id as string | number] = new Animated.Value(0)));
+
       animValsRef.current = m;
       Animated.stagger(
         80,
         res.map((p) =>
-          Animated.timing(animValsRef.current[p.id], {
+
+          Animated.timing(animValsRef.current[p.id as string | number], {
+
             toValue: 1,
             duration: 350,
             useNativeDriver: true,
@@ -146,22 +124,48 @@ export default function PrescriptionScreen() {
       ).start();
     } catch (e: any) {
       setError(e.message || "Failed to load prescriptions");
+
+      console.error('Load data error:', e);
+
     } finally {
       setLoading(false);
     }
   };
 
-  const filtered = data
-    .filter((p) => p.status === tab)
-    .filter((p) => {
-      if (!search) return true;
+
+  const uniqueDoctors = ["All Doctors", ...Array.from(new Set(data.map(p => p.doctor)))];
+  const statusOptions = ["All Statuses", "Pending", "Active", "Expired", "Completed"];
+
+  const filtered = data.filter((p) => {
+    // Status filter
+    if (statusFilter !== "All Statuses" && p.status !== statusFilter) return false;
+    
+    // Doctor filter
+    if (doctorFilter !== "All Doctors" && p.doctor !== doctorFilter) return false;
+    
+    // Search filter
+    if (search) {
       const q = search.toLowerCase();
-      return (
-        p.doctor.toLowerCase().includes(q) ||
-        p.patientName.toLowerCase().includes(q) ||
-        p.medicines.some((m) => m.name.toLowerCase().includes(q))
-      );
-    });
+      if (
+        !p.doctor.toLowerCase().includes(q) &&
+        !p.patientName.toLowerCase().includes(q) &&
+        !p.medicines.some((m) => m.name.toLowerCase().includes(q)) &&
+        !(p.notes?.toLowerCase().includes(q))
+      ) return false;
+    }
+    
+    return true;
+  });
+
+  const clearFilters = () => {
+    setStatusFilter("All Statuses");
+    setDoctorFilter("All Doctors");
+    setDateFilter("All Time");
+    setSearch("");
+  };
+
+  const hasActiveFilters = statusFilter !== "All Statuses" || doctorFilter !== "All Doctors" || dateFilter !== "All Time" || search !== "";
+
 
   const openDetails = (pres: Prescription) => {
     setSelected(pres);
@@ -175,7 +179,10 @@ export default function PrescriptionScreen() {
   const handleRequestRefill = async (pres: Prescription) => {
     setRefillLoadingId(pres.id);
     try {
-      await mockRequestRefill(pres.id);
+
+      // Request refill functionality to be implemented
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       Alert.alert("Refill Requested", "Your refill request has been sent to the pharmacy.");
     } catch (e: any) {
       Alert.alert("Request Failed", e.message || "Unable to request refill.");
@@ -281,26 +288,40 @@ export default function PrescriptionScreen() {
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/images/bg-medical.png")}
-      style={styles.root}
-      imageStyle={{ opacity: 0.12 }}
-      resizeMode="cover"
-    >
-      {/* Header with Back Button */}
+
+    <View style={styles.root}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 6 }}>
-          <Ionicons name="arrow-back" size={24} color="#133E7A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Prescriptions</Text>
+        <View style={{ flex: 1, paddingRight: 8 }}>
+          <Text style={styles.headerTitle}>My Prescriptions</Text>
+          <Text style={styles.headerSubtitle}>View all your prescriptions with complete details - read-only access</Text>
+        </View>
+        <View style={styles.prescriptionCount}>
+          <Ionicons name="document-text" size={18} color="#1E4BA3" />
+          <Text style={styles.countText}>{data.length} Prescription{data.length !== 1 ? 's' : ''}</Text>
+        </View>
       </View>
 
-      {/* Search + Tabs */}
-      <View style={styles.controls}>
+      {/* Filters Section */}
+      <View style={styles.filtersContainer}>
+        <View style={styles.filtersHeader}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <MaterialCommunityIcons name="filter-variant" size={20} color="#333" />
+            <Text style={styles.filtersTitle}>Filters</Text>
+          </View>
+          {hasActiveFilters && (
+            <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
+              <MaterialCommunityIcons name="close-circle" size={16} color="#E74C3C" />
+              <Text style={styles.clearButtonText}>Clear All</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Search Bar */}
         <View style={styles.searchBox}>
-          <MaterialCommunityIcons name="magnify" size={20} color="#555" />
+          <MaterialCommunityIcons name="magnify" size={20} color="#666" />
           <TextInput
-            placeholder="Search doctor, medicine, patient..."
+            placeholder="Search doctor, medicine, notes..."
             style={styles.searchInput}
             value={search}
             onChangeText={setSearch}
@@ -308,24 +329,40 @@ export default function PrescriptionScreen() {
           />
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }}>
-          {tabs.map((t) => {
-            const active = t === tab;
-            return (
-              <TouchableOpacity
-                key={t}
-                onPress={() => setTab(t)}
-                style={[styles.tabBtn, active && { backgroundColor: getStatusColor(t), elevation: 2 }]}
-              >
-                <Text style={[styles.tabText, active && { color: "#fff", fontWeight: "700" }]}>{t}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+
+        {/* Filter Row */}
+        <View style={styles.filterRow}>
+          <View style={styles.filterItem}>
+            <Text style={styles.filterLabel}>Status</Text>
+            <TouchableOpacity style={styles.filterDropdown} onPress={() => setStatusModalVisible(true)}>
+              <Text style={styles.filterValue}>{statusFilter}</Text>
+              <Ionicons name="chevron-down" size={16} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.filterItem}>
+            <Text style={styles.filterLabel}>Doctor</Text>
+            <TouchableOpacity style={styles.filterDropdown} onPress={() => setDoctorModalVisible(true)}>
+              <Text style={styles.filterValue}>{doctorFilter}</Text>
+              <Ionicons name="chevron-down" size={16} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.filterItem}>
+            <Text style={styles.filterLabel}>Date Range</Text>
+            <TouchableOpacity style={styles.filterDropdown}>
+              <Text style={styles.filterValue}>{dateFilter}</Text>
+              <Ionicons name="chevron-down" size={16} color="#666" />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
-      {/* Content */}
-      <View style={styles.content}>
+      {/* Prescriptions List */}
+      <View style={styles.listContainer}>
+        <Text style={styles.listTitle}>Prescriptions List</Text>
+        
+        {/* Content */}
         {loading ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color="#1E4BA3" />
@@ -342,68 +379,177 @@ export default function PrescriptionScreen() {
         ) : filtered.length === 0 ? (
           <View style={styles.center}>
             <Ionicons name="document-outline" size={48} color="#999" />
-            <Text style={{ marginTop: 12, color: "#666" }}>No {tab} prescriptions</Text>
+
+            <Text style={{ marginTop: 12, color: "#666" }}>No prescriptions found</Text>
           </View>
         ) : (
-          <FlatList
-            data={filtered}
-            keyExtractor={(i) => String(i.id)}
-            contentContainerStyle={{ paddingBottom: 100 }}
-            renderItem={({ item }) => {
-              const anim = animValsRef.current[item.id] ?? new Animated.Value(1);
-              return (
-                <Animated.View style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}>
-                  <View style={styles.card}>
-                    <View style={styles.cardRow}>
-                      <View>
-                        <Text style={styles.cardTitle}>#{item.id} — {item.medicines[0]?.name ?? "Prescription"}</Text>
-                        <Text style={styles.cardMeta}>{item.doctor} • {item.issuedDate}</Text>
-                        <Text style={styles.cardMetaSmall}>{item.pharmacy ?? "No pharmacy"}</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={true}
+            style={{ flex: 1 }}
+          >
+            <ScrollView 
+              style={{ flex: 1 }}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={{ minWidth: 1200, paddingBottom: 100 }}>
+                {/* Table Header */}
+                <View style={styles.tableHeader}>
+                  <Text style={[styles.tableHeaderText, { width: 180 }]}>Doctor</Text>
+                  <Text style={[styles.tableHeaderText, { width: 140 }]}>Specialty</Text>
+                  <Text style={[styles.tableHeaderText, { width: 120 }]}>Status</Text>
+                  <Text style={[styles.tableHeaderText, { width: 150 }]}>Issued Date</Text>
+                  <Text style={[styles.tableHeaderText, { width: 120 }]}>Valid Until</Text>
+                  <Text style={[styles.tableHeaderText, { width: 120 }]}>Medicines</Text>
+                  <Text style={[styles.tableHeaderText, { width: 120 }]}>QR Code</Text>
+                  <Text style={[styles.tableHeaderText, { width: 150 }]}>Actions</Text>
+                </View>
+
+                {/* Table Body */}
+                {filtered.map((item) => {
+                  const anim = animValsRef.current[item.id as string | number] ?? new Animated.Value(1);
+                  const specialty = item.doctor.includes("Rohan") ? "Cardiology" : 
+                                   item.doctor.includes("Kavitha") ? "Dermatology" :
+                                   item.doctor.includes("Sunil") ? "General Medicine" :
+                                   item.doctor.includes("Meera") ? "Pediatrics" : "Pediatrics";
+                  
+                  return (
+                    <Animated.View key={item.id} style={{ opacity: anim }}>
+                      <View style={styles.tableRow}>
+                        <View style={[styles.tableCell, { width: 180 }]}>
+                          <MaterialCommunityIcons name="doctor" size={20} color="#1E4BA3" />
+                          <Text style={styles.tableCellText} numberOfLines={1}>{item.doctor.replace("Dr. ", "")}</Text>
+                        </View>
+
+                        <View style={[styles.tableCell, { width: 140 }]}>
+                          <Text style={styles.tableCellText}>{specialty}</Text>
+                        </View>
+
+                        <View style={[styles.tableCell, { width: 120 }]}>
+                          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+                            <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+                          </View>
+                        </View>
+
+                        <View style={[styles.tableCell, { width: 150 }]}>
+                          <MaterialCommunityIcons name="calendar" size={16} color="#666" />
+                          <View style={{ marginLeft: 6 }}>
+                            <Text style={styles.tableCellText}>{item.issuedDate}</Text>
+                            <Text style={styles.tableCellSubtext}>Issued</Text>
+                          </View>
+                        </View>
+
+                        <View style={[styles.tableCell, { width: 120 }]}>
+                          <Text style={styles.tableCellText}>{item.refillDate || "N/A"}</Text>
+                        </View>
+
+                        <View style={[styles.tableCell, { width: 120, justifyContent: 'center' }]}>
+                          <View style={styles.medicinesBadge}>
+                            <Text style={styles.medicinesText}>{item.medicines.length} items</Text>
+                          </View>
+                        </View>
+
+                        <View style={[styles.tableCell, { width: 120, justifyContent: 'center', gap: 12 }]}>
+                          <TouchableOpacity>
+                            <MaterialCommunityIcons name="eye-outline" size={22} color="#1E4BA3" />
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => handleDownloadPDF(item)}>
+                            <MaterialCommunityIcons name="download-outline" size={22} color="#666" />
+                          </TouchableOpacity>
+                        </View>
+
+                        <View style={[styles.tableCell, { width: 150, gap: 8 }]}>
+                          <TouchableOpacity style={styles.viewButton} onPress={() => openDetails(item)}>
+                            <MaterialCommunityIcons name="eye" size={16} color="#1E4BA3" />
+                            <Text style={styles.viewButtonText}>View</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => handleDownloadPDF(item)}>
+                            <MaterialCommunityIcons name="download" size={22} color="#666" />
+                          </TouchableOpacity>
+                        </View>
                       </View>
-
-                      <View style={[styles.badge, { backgroundColor: getStatusColor(item.status) }]}>
-                        <Text style={styles.badgeText}>{item.status}</Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.cardActions}>
-                      <TouchableOpacity style={styles.actionBtn} onPress={() => openDetails(item)}>
-                        <MaterialCommunityIcons name="eye-outline" size={18} color="#1E4BA3" />
-                        <Text style={styles.actionText}>View Details</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity style={styles.actionBtn} onPress={() => handleDownloadPDF(item)}>
-                        <MaterialCommunityIcons name="download-outline" size={18} color="#1E4BA3" />
-                        <Text style={styles.actionText}>Download PDF</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[styles.actionBtn, { borderColor: "#E0E0E0" }]}
-                        onPress={() => handleContactDoctor(item)}
-                      >
-                        <MaterialCommunityIcons name="phone-outline" size={18} color="#1E4BA3" />
-                        <Text style={styles.actionText}>Contact</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={[styles.refillBtn]}
-                        onPress={() => handleRequestRefill(item)}
-                        disabled={refillLoadingId === item.id}
-                      >
-                        {refillLoadingId === item.id ? (
-                          <ActivityIndicator size="small" color="#fff" />
-                        ) : (
-                          <Text style={styles.refillText}>Request Refill</Text>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </Animated.View>
-              );
-            }}
-          />
+                    </Animated.View>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </ScrollView>
         )}
       </View>
+
+      {/* Status Filter Modal */}
+      <Modal visible={statusModalVisible} animationType="fade" transparent onRequestClose={() => setStatusModalVisible(false)}>
+        <View style={styles.modalBg}>
+          <View style={styles.filterModal}>
+            <View style={styles.filterModalHeader}>
+              <Text style={styles.filterModalTitle}>Select Status</Text>
+              <TouchableOpacity onPress={() => setStatusModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.filterModalScroll}>
+              {statusOptions.map((status) => (
+                <TouchableOpacity
+                  key={status}
+                  style={[
+                    styles.filterOption,
+                    statusFilter === status && styles.filterOptionActive
+                  ]}
+                  onPress={() => {
+                    setStatusFilter(status);
+                    setStatusModalVisible(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.filterOptionText,
+                    statusFilter === status && styles.filterOptionTextActive
+                  ]}>{status}</Text>
+                  {statusFilter === status && (
+                    <Ionicons name="checkmark-circle" size={22} color="#1E4BA3" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Doctor Filter Modal */}
+      <Modal visible={doctorModalVisible} animationType="fade" transparent onRequestClose={() => setDoctorModalVisible(false)}>
+        <View style={styles.modalBg}>
+          <View style={styles.filterModal}>
+            <View style={styles.filterModalHeader}>
+              <Text style={styles.filterModalTitle}>Select Doctor</Text>
+              <TouchableOpacity onPress={() => setDoctorModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.filterModalScroll}>
+              {uniqueDoctors.map((doctor) => (
+                <TouchableOpacity
+                  key={doctor}
+                  style={[
+                    styles.filterOption,
+                    doctorFilter === doctor && styles.filterOptionActive
+                  ]}
+                  onPress={() => {
+                    setDoctorFilter(doctor);
+                    setDoctorModalVisible(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.filterOptionText,
+                    doctorFilter === doctor && styles.filterOptionTextActive
+                  ]}>{doctor}</Text>
+                  {doctorFilter === doctor && (
+                    <Ionicons name="checkmark-circle" size={22} color="#1E4BA3" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {/* Details Modal */}
       <Modal visible={detailModalVisible} animationType="slide" onRequestClose={closeDetails} transparent>
@@ -472,43 +618,351 @@ export default function PrescriptionScreen() {
           <Text style={styles.navText}>Profile</Text>
         </TouchableOpacity>
       </View>
-    </ImageBackground>
+
+    </View>
+
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#F3F7FB" },
-  header: { paddingTop: 44, paddingBottom: 14, paddingHorizontal: 16, backgroundColor: "#FFFFFF", borderBottomColor: "#EEF2F6", borderBottomWidth: 1 },
-  headerTitle: { fontSize: 22, fontWeight: "800", color: "#133E7A" },
-  controls: { paddingHorizontal: 16, paddingTop: 12 },
-  searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, borderWidth: 1, borderColor: "#EDEFF6", elevation: 1 },
-  searchInput: { marginLeft: 8, flex: 1, height: 36 },
-  tabBtn: { paddingVertical: 8, paddingHorizontal: 14, backgroundColor: "#fff", borderRadius: 20, marginRight: 8, borderWidth: 1, borderColor: "#EDEFF6" },
-  tabText: { color: "#333", fontWeight: "600" },
-  content: { flex: 1, paddingHorizontal: 16, paddingTop: 12 },
-  center: { alignItems: "center", justifyContent: "center", paddingTop: 40 },
-  retryBtn: { marginTop: 12, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: "#1E4BA3", borderRadius: 8 },
-  retryText: { color: "#fff", fontWeight: "700" },
-  card: { backgroundColor: "#fff", padding: 14, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: "#EEF2F6" },
-  cardRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  cardTitle: { fontSize: 16, fontWeight: "700", color: "#133E7A" },
-  cardMeta: { color: "#666", marginTop: 6 },
-  cardMetaSmall: { color: "#999", marginTop: 2, fontSize: 12 },
-  badge: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  badgeText: { color: "#fff", fontWeight: "700" },
-  cardActions: { marginTop: 12, flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  actionBtn: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: "#E6EDF9", paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, marginRight: 8, marginBottom: 8 },
-  actionText: { marginLeft: 8, color: "#1E4BA3", fontWeight: "700" },
-  refillBtn: { marginLeft: "auto", backgroundColor: "#1E4BA3", paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, alignItems: "center", justifyContent: "center" },
-  refillText: { color: "#fff", fontWeight: "700" },
-  modalBg: { flex: 1, backgroundColor: "rgba(12,12,12,0.45)", justifyContent: "center", padding: 18 },
-  modalCard: { backgroundColor: "#fff", borderRadius: 12, padding: 16 },
-  detailLabel: { color: "#666", marginTop: 8, fontWeight: "700" },
-  detailValue: { color: "#222", marginTop: 4 },
-  modalBtn: { flexDirection: "row", alignItems: "center", backgroundColor: "#1E4BA3", paddingHorizontal: 12, paddingVertical: 10, borderRadius: 8 },
-  modalBtnText: { color: "#fff", marginLeft: 8, fontWeight: "700" },
-  bottomNav: { height: 60, flexDirection: "row", justifyContent: "space-around", alignItems: "center", borderTopWidth: 1, borderColor: "#EDEFF6", backgroundColor: "#fff" },
-  navItem: { alignItems: "center", justifyContent: "center" },
-    navIcon: { fontSize: 24, marginBottom: 4 },
-  navText: { fontSize: 12, color: "#333", marginTop: 2 },
+
+  root: { flex: 1, backgroundColor: "#F5F7FA", paddingTop: 40 },
+  header: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E8EAED",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  headerTitle: { fontSize: 20, fontWeight: "700", color: "#1A1A1A", marginBottom: 4 },
+  headerSubtitle: { fontSize: 11, color: "#6B7280", marginTop: 2, maxWidth: "85%", lineHeight: 16 },
+  prescriptionCount: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+    gap: 4,
+  },
+  countText: { fontSize: 11, fontWeight: "600", color: "#1E4BA3" },
+
+  filtersContainer: {
+    backgroundColor: "#fff",
+    marginHorizontal: 12,
+    marginVertical: 12,
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  filtersHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  filtersTitle: { fontSize: 16, fontWeight: "600", color: "#333" },
+  clearButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: "#FEE",
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#FCC",
+  },
+  clearButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#E74C3C",
+  },
+  
+  searchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginBottom: 12,
+    gap: 6,
+  },
+  searchInput: { flex: 1, fontSize: 14, color: "#333" },
+
+  filterRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  filterItem: {
+    flex: 1,
+    minWidth: 100,
+  },
+  filterLabel: {
+    fontSize: 11,
+    color: "#6B7280",
+    marginBottom: 6,
+    fontWeight: "500",
+  },
+  filterDropdown: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  filterValue: {
+    fontSize: 11,
+    color: "#333",
+    flexShrink: 1,
+  },
+
+  listContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+    marginHorizontal: 12,
+    marginBottom: 12,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  listTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1A1A1A",
+    marginBottom: 12,
+  },
+
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#F9FAFB",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderBottomWidth: 2,
+    borderBottomColor: "#E5E7EB",
+  },
+  tableHeaderText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#374151",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+
+  tableRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+    minHeight: 80,
+    backgroundColor: "#fff",
+  },
+  tableCell: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 8,
+  },
+  tableCellText: {
+    fontSize: 14,
+    color: "#1A1A1A",
+    fontWeight: "500",
+    flexShrink: 1,
+  },
+  tableCellSubtext: {
+    fontSize: 11,
+    color: "#9CA3AF",
+    marginTop: 2,
+  },
+
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignSelf: "flex-start",
+    minWidth: 90,
+    alignItems: "center",
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#fff",
+    letterSpacing: 0.5,
+  },
+
+  medicinesBadge: {
+    backgroundColor: "#EFF6FF",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#DBEAFE",
+  },
+  medicinesText: {
+    fontSize: 12,
+    color: "#1E4BA3",
+    fontWeight: "600",
+  },
+
+  viewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#1E4BA3",
+    backgroundColor: "#F0F9FF",
+  },
+  viewButtonText: {
+    fontSize: 12,
+    color: "#1E4BA3",
+    fontWeight: "600",
+  },
+
+  center: { flex: 1, justifyContent: "center", alignItems: "center", paddingVertical: 40 },
+  retryBtn: {
+    marginTop: 16,
+    backgroundColor: "#1E4BA3",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryText: { color: "#fff", fontWeight: "600" },
+
+  modalBg: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    width: "90%",
+    maxHeight: "80%",
+  },
+  filterModal: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    width: "85%",
+    maxHeight: "60%",
+  },
+  filterModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  filterModalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1A1A1A",
+  },
+  filterModalScroll: {
+    maxHeight: 400,
+  },
+  filterOption: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: "#F9FAFB",
+  },
+  filterOptionActive: {
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#1E4BA3",
+  },
+  filterOptionText: {
+    fontSize: 15,
+    color: "#374151",
+    fontWeight: "500",
+  },
+  filterOptionTextActive: {
+    color: "#1E4BA3",
+    fontWeight: "600",
+  },
+  detailLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#6B7280",
+    marginTop: 16,
+    marginBottom: 4,
+  },
+  detailValue: {
+    fontSize: 15,
+    color: "#1A1A1A",
+  },
+  modalBtn: {
+    flex: 1,
+    backgroundColor: "#1E4BA3",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginHorizontal: 4,
+    gap: 6,
+  },
+  modalBtnText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+
+  bottomNav: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#E8EAED",
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+  },
+  navItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 6,
+  },
+  navIcon: { fontSize: 24, marginBottom: 4 },
+  navText: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 4,
+    fontWeight: "500",
+  },
+
 });

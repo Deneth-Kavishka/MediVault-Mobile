@@ -1,21 +1,22 @@
 // app/(auth)/patient-dashboard.tsx
+
+import { FontAwesome5, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker";
+import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ImageBackground,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
   FlatList,
   Platform,
   Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+
 
 type Appointment = {
   id: string;
@@ -89,12 +90,9 @@ export default function PatientDashboard() {
   };
 
   return (
-    <ImageBackground
-      source={require("../../assets/images/bg-medical.png")}
-      style={styles.bg}
-      imageStyle={{ opacity: 0.12 }}
-      resizeMode="cover"
-    >
+
+    <View style={styles.bg}>
+   
       <ScrollView contentContainerStyle={styles.container}>
 
         {/* Header */}
@@ -237,7 +235,9 @@ export default function PatientDashboard() {
         </View>
 
       </ScrollView>
-    </ImageBackground>
+
+    </View>
+
   );
 }
 

@@ -1,72 +1,70 @@
-const dotenv = require('dotenv');
+
 const { Pool } = require('pg');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
-const poolConfig = process.env.DATABASE_URL
-  ? { connectionString: process.env.DATABASE_URL }
-  : {
-      host: process.env.PGHOST || 'localhost',
-      port: process.env.PGPORT ? Number(process.env.PGPORT) : 5432,
-      user: process.env.PGUSER || 'postgres',
-      password: process.env.PGPASSWORD || '12345',
-      database: process.env.PGDATABASE || 'medivault',
-    };
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || null,
+  host: process.env.DB_HOST || process.env.PGHOST || 'localhost',
+  port: (process.env.DB_PORT || process.env.PGPORT) ? Number(process.env.DB_PORT || process.env.PGPORT) : 5432,
+  user: process.env.DB_USER || process.env.PGUSER || 'postgres',
+  password: process.env.DB_PASSWORD || process.env.PGPASSWORD || '12345',
+  database: process.env.DB_NAME || process.env.PGDATABASE || 'medivault',
+});
 
-const pool = new Pool(poolConfig);
-
-async function run() {
+async function migrate() {
+  const client = await pool.connect();
   try {
-    console.log('Connecting to DB...');
-    const client = await pool.connect();
-    try {
-      console.log('Creating table `prescriptions` if not exists...');
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS prescriptions (
-          id SERIAL PRIMARY KEY,
-          doctor TEXT,
-          doctor_contact TEXT,
-          patient_name TEXT,
-          issued_date DATE,
-          pharmacy TEXT,
-          refill_date DATE,
-          medicines JSONB,
-          notes TEXT,
-          status TEXT,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-      `);
+    console.log('Running migrations...');
 
-      console.log('Inserting sample row...');
+    // Create appointments table (minimal columns used by the app)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS appointments (
+        id varchar PRIMARY KEY,
+        patient_id varchar NOT NULL,
+        doctor_id varchar NOT NULL,
+        appointment_date timestamp without time zone NOT NULL,
+        appointment_time varchar,
+        status varchar DEFAULT 'confirmed',
+        reason text,
+        notes text,
+        availability_id varchar,
+        created_at timestamp without time zone DEFAULT now(),
+        updated_at timestamp without time zone DEFAULT now()
+      );
+    `);
+
+    // Seed a sample row if table is empty
+    const { rows } = await client.query('SELECT count(*)::int as c FROM appointments');
+    if (rows[0].c === 0) {
       await client.query(
-        `INSERT INTO prescriptions (doctor, doctor_contact, patient_name, issued_date, pharmacy, medicines, notes, status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-         ON CONFLICT DO NOTHING;`,
+        `INSERT INTO appointments (id, patient_id, doctor_id, appointment_date, appointment_time, status, reason)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
         [
-          'Dr. Rohan Perera',
-          'tel:+94123456789',
-          'Nethra Sandamini',
-          '2025-07-10',
-          'City Pharmacy',
-          JSON.stringify([
-            { name: 'Amoxicillin 500mg', dose: '1 capsule', frequency: '3x/day' },
-            { name: 'Vitamin C 500mg', dose: '1 tablet', frequency: '1x/day' },
-          ]),
-          'Take after food. Finish full course.',
-          'Active',
+          'appt-sample-1',
+          'f0bb7913-6e31-4187-97db-5edede61b1c9',
+          'ce138882-45ee-40f4-bfc8-9794ed4ea00d',
+          new Date('2025-12-16T12:30:00').toISOString(),
+          '12:30 PM',
+          'confirmed',
+          'Regular Checkup',
         ]
       );
-
-      console.log('Migration complete.');
-    } finally {
-      client.release();
+      console.log('Seeded sample appointment.');
     }
+
+    console.log('Migrations complete.');
   } catch (err) {
-    console.error('Migration error:', err && err.message ? err.message : err);
-    process.exit(1);
+    console.error('Migration error:', err);
+    process.exitCode = 1;
   } finally {
+    client.release();
+
     await pool.end();
   }
 }
 
-run();
+
+migrate();
+

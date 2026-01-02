@@ -1,8 +1,8 @@
 /**
  * API Configuration
  */
-export const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:5000/api';
-export const WS_URL = process.env.WS_URL || 'ws://localhost:5000';
+export const API_BASE_URL = process.env.API_BASE_URL || 'http://192.168.8.101:4000';
+export const WS_URL = process.env.WS_URL || 'ws://localhost:4000';
 export const ENVIRONMENT = process.env.ENVIRONMENT || 'development';
 
 /**
